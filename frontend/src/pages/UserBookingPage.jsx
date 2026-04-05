@@ -7,7 +7,6 @@ function UserBookingPage() {
 
   const [form, setForm] = useState({
     resourceId: "",
-    userId: localStorage.getItem("userId"), // auto user
     userId: localStorage.getItem("userId"),
     date: "",
     startTime: "",
@@ -23,7 +22,6 @@ function UserBookingPage() {
 
   const fetchBookings = async () => {
     const userId = localStorage.getItem("userId");
-    const res = await API.get(`/bookings/user/${userId}`); // better filtering
     const res = await API.get(`/bookings/user/${userId}`);
     setBookings(res.data);
   };
@@ -40,19 +38,6 @@ function UserBookingPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    await API.post("/bookings", form);
-
-    alert("Booking created!");
-
-    setForm({
-      resourceId: "",
-      userId: localStorage.getItem("userId"),
-      date: "",
-      startTime: "",
-      endTime: "",
-      purpose: "",
-      attendees: "",
-    });
     try {
       await API.post("/bookings", form);
       alert("Booking created!");
@@ -100,7 +85,6 @@ function UserBookingPage() {
 
         <form onSubmit={handleSubmit} className="grid grid-cols-4 gap-4">
 
-          <select name="resourceId" value={form.resourceId} onChange={handleChange} className="border p-2 rounded-lg">
           <select
             name="resourceId"
             value={form.resourceId}
@@ -119,7 +103,6 @@ function UserBookingPage() {
           <input name="purpose" placeholder="Purpose" value={form.purpose} onChange={handleChange} className="border p-2 rounded-lg" />
           <input name="attendees" placeholder="Attendees" value={form.attendees} onChange={handleChange} className="border p-2 rounded-lg" />
 
-          <button className="col-span-4 bg-blue-600 text-white py-2 rounded-lg">
           <button className="col-span-4 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
             Book Resource
           </button>
@@ -131,13 +114,6 @@ function UserBookingPage() {
       <div className="bg-white p-6 rounded-xl shadow-md">
         <h3 className="text-lg font-semibold mb-4">My Bookings</h3>
 
-        {bookings.map((b) => (
-          <div key={b.id} className="p-4 bg-gray-50 rounded-lg mb-2">
-            <p>Resource: {b.resourceId}</p>
-            <p>{b.date} | {b.startTime} - {b.endTime}</p>
-            <p>Status: {b.status}</p>
-          </div>
-        ))}
         {bookings.map((b) => {
           // ✅ Find resource name instead of ID
           const resource = resources.find(r => r.id === b.resourceId);
