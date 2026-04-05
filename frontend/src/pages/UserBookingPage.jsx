@@ -7,7 +7,7 @@ function UserBookingPage() {
 
   const [form, setForm] = useState({
     resourceId: "",
-    userId: localStorage.getItem("userId"), // auto user
+    userId: localStorage.getItem("userId"),
     date: "",
     startTime: "",
     endTime: "",
@@ -22,7 +22,7 @@ function UserBookingPage() {
 
   const fetchBookings = async () => {
     const userId = localStorage.getItem("userId");
-    const res = await API.get(`/bookings/user/${userId}`); // better filtering
+    const res = await API.get(`/bookings/user/${userId}`);
     setBookings(res.data);
   };
 
@@ -38,21 +38,40 @@ function UserBookingPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    await API.post("/bookings", form);
+    try {
+      await API.post("/bookings", form);
+      alert("Booking created!");
 
-    alert("Booking created!");
+      setForm({
+        resourceId: "",
+        userId: localStorage.getItem("userId"),
+        date: "",
+        startTime: "",
+        endTime: "",
+        purpose: "",
+        attendees: "",
+      });
 
-    setForm({
-      resourceId: "",
-      userId: localStorage.getItem("userId"),
-      date: "",
-      startTime: "",
-      endTime: "",
-      purpose: "",
-      attendees: "",
-    });
+      fetchBookings();
+    } catch (err) {
+      alert("Booking failed");
+    }
+  };
 
-    fetchBookings();
+  // ✅ NEW: Cancel Booking
+  const cancelBooking = async (id, status) => {
+    if (status === "CANCELLED") {
+      alert("Already cancelled!");
+      return;
+    }
+
+    try {
+      await API.put(`/bookings/${id}/cancel`);
+      alert("Booking cancelled!");
+      fetchBookings();
+    } catch (err) {
+      alert("Cancel failed");
+    }
   };
 
   return (
@@ -66,7 +85,12 @@ function UserBookingPage() {
 
         <form onSubmit={handleSubmit} className="grid grid-cols-4 gap-4">
 
-          <select name="resourceId" value={form.resourceId} onChange={handleChange} className="border p-2 rounded-lg">
+          <select
+            name="resourceId"
+            value={form.resourceId}
+            onChange={handleChange}
+            className="border p-2 rounded-lg"
+          >
             <option value="">Select Resource</option>
             {resources.map((r) => (
               <option key={r.id} value={r.id}>{r.name}</option>
@@ -79,7 +103,7 @@ function UserBookingPage() {
           <input name="purpose" placeholder="Purpose" value={form.purpose} onChange={handleChange} className="border p-2 rounded-lg" />
           <input name="attendees" placeholder="Attendees" value={form.attendees} onChange={handleChange} className="border p-2 rounded-lg" />
 
-          <button className="col-span-4 bg-blue-600 text-white py-2 rounded-lg">
+          <button className="col-span-4 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
             Book Resource
           </button>
 
@@ -90,13 +114,54 @@ function UserBookingPage() {
       <div className="bg-white p-6 rounded-xl shadow-md">
         <h3 className="text-lg font-semibold mb-4">My Bookings</h3>
 
-        {bookings.map((b) => (
-          <div key={b.id} className="p-4 bg-gray-50 rounded-lg mb-2">
-            <p>Resource: {b.resourceId}</p>
-            <p>{b.date} | {b.startTime} - {b.endTime}</p>
-            <p>Status: {b.status}</p>
-          </div>
-        ))}
+        {bookings.map((b) => {
+          // ✅ Find resource name instead of ID
+          const resource = resources.find(r => r.id === b.resourceId);
+
+          return (
+            <div
+              key={b.id}
+              className="p-4 bg-gray-50 rounded-lg mb-2 flex justify-between items-center"
+            >
+
+              {/* INFO */}
+              <div>
+                <p className="font-medium">
+                  Resource: {resource ? resource.name : b.resourceId}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {b.date} | {b.startTime} - {b.endTime}
+                </p>
+                <p className="text-sm">
+                  Status:{" "}
+                  <span className={
+                    b.status === "CANCELLED"
+                      ? "text-red-600"
+                      : b.status === "PENDING"
+                      ? "text-yellow-600"
+                      : "text-green-600"
+                  }>
+                    {b.status}
+                  </span>
+                </p>
+              </div>
+
+              {/* ACTION */}
+              <button
+                disabled={b.status === "CANCELLED"}
+                onClick={() => cancelBooking(b.id, b.status)}
+                className={`px-3 py-1 rounded text-white ${
+                  b.status === "CANCELLED"
+                    ? "bg-gray-400"
+                    : "bg-red-600 hover:bg-red-700"
+                }`}
+              >
+                Cancel
+              </button>
+
+            </div>
+          );
+        })}
       </div>
 
     </div>
