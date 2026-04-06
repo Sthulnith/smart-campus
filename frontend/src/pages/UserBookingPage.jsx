@@ -4,6 +4,7 @@ import API from "../services/api";
 function UserBookingPage() {
   const [bookings, setBookings] = useState([]);
   const [resources, setResources] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("ALL"); // ✅ NEW
 
   const [form, setForm] = useState({
     resourceId: "",
@@ -59,6 +60,7 @@ function UserBookingPage() {
   };
 
   // ✅ NEW: Cancel Booking
+  // ✅ Cancel Booking
   const cancelBooking = async (id, status) => {
     if (status === "CANCELLED") {
       alert("Already cancelled!");
@@ -73,6 +75,12 @@ function UserBookingPage() {
       alert("Cancel failed");
     }
   };
+
+  // ✅ FILTER LOGIC
+  const filteredBookings =
+    statusFilter === "ALL"
+      ? bookings
+      : bookings.filter((b) => b.status === statusFilter);
 
   return (
     <div className="space-y-6">
@@ -116,6 +124,23 @@ function UserBookingPage() {
 
         {bookings.map((b) => {
           // ✅ Find resource name instead of ID
+        {/* ✅ HEADER + FILTER */}
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">My Bookings</h3>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="border p-2 rounded-lg"
+          >
+            <option value="ALL">All</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED">Approved</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+        </div>
+
+        {filteredBookings.map((b) => {
           const resource = resources.find(r => r.id === b.resourceId);
 
           return (
