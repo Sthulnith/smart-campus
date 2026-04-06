@@ -1,40 +1,65 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-dom";
 
+import AdminRoute from "./components/AdminRoute";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
+import { AuthProvider } from "./contexts/AuthContext";
+import AdminPage from "./pages/AdminPage";
+import AuthCallbackPage from "./pages/AuthCallbackPage";
+import LoginPage from "./pages/LoginPage";
 
 import ResourcePage from "./pages/ResourcePage";
 import BookingPage from "./pages/BookingPage";
 import TicketPage from "./pages/TicketPage";
 
-function App() {
+function AppLayout() {
   return (
-    <Router>
-      <div className="flex">
-
-        {/* Sidebar */}
-        <Sidebar />
-
-        {/* Main Content */}
-        <div className="flex-1 bg-gray-100 min-h-screen">
-
-          <Header />
-
-          <div className="p-6">
-
-            <Routes>
-              <Route path="/" element={<ResourcePage />} />
-              <Route path="/resources" element={<ResourcePage />} />
-              <Route path="/bookings" element={<BookingPage />} />
-              <Route path="/tickets" element={<TicketPage />} />
-            </Routes>
-
-          </div>
-
+    <div className="flex">
+      <Sidebar />
+      <div className="flex-1 bg-gray-100 min-h-screen">
+        <Header />
+        <div className="p-6">
+          <Routes>
+            <Route path="/" element={<ResourcePage />} />
+            <Route path="/resources" element={<ResourcePage />} />
+            <Route path="/bookings" element={<BookingPage />} />
+            <Route path="/tickets" element={<TicketPage />} />
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminPage />
+                </AdminRoute>
+              }
+            />
+          </Routes>
         </div>
       </div>
-    </Router>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route
+            path="/*"
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

@@ -1,0 +1,15 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: smart-campus-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: smart_campus_db
+      MYSQL_USER: smartcampus
+      MYSQL_PASSWORD: smartcampus
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - smart-campus-mysql-data:/var/lib/mysql
+volumes:
+  smart-campus-mysql-data:
