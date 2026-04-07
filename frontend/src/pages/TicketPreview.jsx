@@ -1,131 +1,143 @@
-export default function BookingPreviewPage() {
-  const booking = {
-    facility: "Main Auditorium",
-    category: "Event Hall",
-    date: "April 12, 2026",
-    time: "9:00 AM - 1:00 PM",
-    requester: "Shehan Perera",
+export default function TicketPreviewPage() {
+  const ticket = {
+    id: "TCK-2026-0412-024",
+    title: "Projector Not Working in Lecture Hall A",
+    category: "Equipment Issue",
+    priority: "High",
+    status: "Open",
+    submittedBy: "Shehan Perera",
     department: "Computer Science Department",
-    attendees: 120,
-    purpose: "Final year project presentation and evaluation session.",
-    equipment: ["Projector", "Sound System", "Wireless Microphones", "Air Conditioning"],
-    status: "Pending Approval",
-    reference: "BK-2026-0412-018",
-    notes: "Please ensure seating is arranged in presentation style before 8:30 AM.",
+    facility: "Lecture Hall A",
+    submittedDate: "April 7, 2026",
+    expectedResolution: "Within 24 hours",
+    description:
+      "The projector in Lecture Hall A does not power on. A lecture is scheduled for tomorrow morning, so immediate attention is required.",
+    assignedTo: "Facilities Support Team",
+    attachments: ["projector-front-view.jpg", "power-connection.jpg"],
+    notes:
+      "Please inspect the power supply and HDMI connection. Spare projector may be required if repair cannot be completed today.",
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6 md:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 p-6 md:p-10">
       <div className="mx-auto max-w-6xl">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-green-600">
               Campus Facilities Management
             </p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
-              Booking Preview
+            <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+              Ticket Preview
             </h1>
-            <p className="mt-2 max-w-2xl text-sm text-gray-600 md:text-base">
-              Review facility reservation details before confirming, editing, or submitting the booking request.
+            <p className="mt-2 max-w-2xl text-sm text-slate-600 md:text-base">
+              Review the support ticket details before submitting, editing, or assigning the request.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <button className="rounded-2xl border border-blue-300 bg-blue-50 px-5 py-2.5 text-sm font-medium text-blue-700 shadow-sm hover:bg-blue-100">
-              Edit Booking
+            <button className="rounded-2xl border border-green-300 bg-green-50 px-5 py-2.5 text-sm font-medium text-green-700 shadow-sm hover:bg-green-100">
+              Edit Ticket
             </button>
-            <button className="rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 px-5 py-2.5 text-sm font-medium text-white shadow-md hover:opacity-90">
-              Confirm Booking
+            <button className="rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-md hover:opacity-90">
+              Submit Ticket
             </button>
           </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
-            <div className="rounded-3xl bg-white p-6 shadow-md border border-blue-100">
+            <div className="rounded-3xl border border-green-100 bg-white p-6 shadow-md">
               <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <div className="inline-flex rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
-                    {booking.category}
+                  <div className="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                    {ticket.category}
                   </div>
-                  <h2 className="mt-4 text-2xl font-semibold text-gray-900">
-                    {booking.facility}
+                  <h2 className="mt-4 text-2xl font-semibold text-slate-900">
+                    {ticket.title}
                   </h2>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Reference ID: {booking.reference}
-                  </p>
+                  <p className="mt-2 text-sm text-slate-500">Ticket ID: {ticket.id}</p>
                 </div>
 
-                <div className="self-start rounded-2xl border border-yellow-300 bg-yellow-100 px-4 py-2 text-sm font-semibold text-yellow-800">
-                  {booking.status}
+                <div className="flex flex-wrap gap-2">
+                  <span className="rounded-2xl border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">
+                    {ticket.priority} Priority
+                  </span>
+                  <span className="rounded-2xl border border-green-300 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700">
+                    {ticket.status}
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-3xl bg-white p-6 shadow-md border border-blue-100">
-              <h3 className="text-lg font-semibold text-gray-900">Booking Details</h3>
+            <div className="rounded-3xl border border-green-100 bg-white p-6 shadow-md">
+              <h3 className="text-lg font-semibold text-slate-900">Ticket Details</h3>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <InfoCard label="Date" value={booking.date} />
-                <InfoCard label="Time" value={booking.time} />
-                <InfoCard label="Requester" value={booking.requester} />
-                <InfoCard label="Department" value={booking.department} />
-                <InfoCard label="Expected Attendees" value={`${booking.attendees} People`} />
-                <InfoCard label="Purpose" value={booking.purpose} />
+                <InfoCard label="Submitted By" value={ticket.submittedBy} />
+                <InfoCard label="Department" value={ticket.department} />
+                <InfoCard label="Facility" value={ticket.facility} />
+                <InfoCard label="Submitted Date" value={ticket.submittedDate} />
+                <InfoCard label="Assigned To" value={ticket.assignedTo} />
+                <InfoCard label="Expected Resolution" value={ticket.expectedResolution} />
               </div>
             </div>
 
-            <div className="rounded-3xl bg-white p-6 shadow-md border border-blue-100">
-              <h3 className="text-lg font-semibold text-gray-900">Requested Equipment</h3>
+            <div className="rounded-3xl border border-green-100 bg-white p-6 shadow-md">
+              <h3 className="text-lg font-semibold text-slate-900">Issue Description</h3>
+              <p className="mt-3 text-sm leading-7 text-slate-600">{ticket.description}</p>
+            </div>
+
+            <div className="rounded-3xl border border-green-100 bg-white p-6 shadow-md">
+              <h3 className="text-lg font-semibold text-slate-900">Attachments</h3>
               <div className="mt-4 flex flex-wrap gap-3">
-                {booking.equipment.map((item) => (
+                {ticket.attachments.map((file) => (
                   <span
-                    key={item}
-                    className="rounded-full bg-gradient-to-r from-blue-100 to-purple-100 px-4 py-2 text-sm font-medium text-gray-700"
+                    key={file}
+                    className="rounded-full bg-gradient-to-r from-green-100 to-emerald-100 px-4 py-2 text-sm font-medium text-slate-700"
                   >
-                    {item}
+                    {file}
                   </span>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-3xl bg-white p-6 shadow-md border border-blue-100">
-              <h3 className="text-lg font-semibold text-gray-900">Additional Notes</h3>
-              <p className="mt-3 text-sm leading-7 text-gray-600">{booking.notes}</p>
+            <div className="rounded-3xl border border-green-100 bg-white p-6 shadow-md">
+              <h3 className="text-lg font-semibold text-slate-900">Additional Notes</h3>
+              <p className="mt-3 text-sm leading-7 text-slate-600">{ticket.notes}</p>
             </div>
           </div>
 
           <div className="space-y-6">
-            <div className="rounded-3xl bg-gradient-to-br from-blue-600 to-purple-600 p-6 text-white shadow-md">
-              <h3 className="text-lg font-semibold">Booking Summary</h3>
+            <div className="rounded-3xl bg-gradient-to-br from-green-600 to-emerald-600 p-6 text-white shadow-md">
+              <h3 className="text-lg font-semibold">Ticket Summary</h3>
               <div className="mt-5 space-y-4">
-                <SummaryRow label="Facility" value={booking.facility} />
-                <SummaryRow label="Date" value={booking.date} />
-                <SummaryRow label="Time" value={booking.time} />
-                <SummaryRow label="Attendees" value={`${booking.attendees}`} />
-                <SummaryRow label="Status" value={booking.status} />
+                <SummaryRow label="Ticket ID" value={ticket.id} />
+                <SummaryRow label="Category" value={ticket.category} />
+                <SummaryRow label="Priority" value={ticket.priority} />
+                <SummaryRow label="Status" value={ticket.status} />
+                <SummaryRow label="Facility" value={ticket.facility} />
               </div>
             </div>
 
-            <div className="rounded-3xl bg-white p-6 shadow-md border border-blue-100">
-              <h3 className="text-lg font-semibold text-gray-900">Policy Reminder</h3>
-              <ul className="mt-4 space-y-3 text-sm text-gray-600">
-                <li>Bookings are subject to administrative approval.</li>
-                <li>Any cancellation should be made at least 24 hours in advance.</li>
-                <li>Damages to equipment or facilities may incur additional charges.</li>
+            <div className="rounded-3xl border border-green-100 bg-white p-6 shadow-md">
+              <h3 className="text-lg font-semibold text-slate-900">Support Guidelines</h3>
+              <ul className="mt-4 space-y-3 text-sm text-slate-600">
+                <li>Provide accurate issue details to speed up resolution.</li>
+                <li>High-priority tickets are reviewed first by the support team.</li>
+                <li>Attachments should clearly show the reported issue.</li>
               </ul>
             </div>
 
-            <div className="rounded-3xl bg-white p-6 shadow-md border border-blue-100">
-              <h3 className="text-lg font-semibold text-gray-900">Actions</h3>
+            <div className="rounded-3xl border border-green-100 bg-white p-6 shadow-md">
+              <h3 className="text-lg font-semibold text-slate-900">Actions</h3>
               <div className="mt-4 space-y-3">
                 <button className="w-full rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 text-sm font-medium text-white hover:opacity-90">
-                  Submit for Approval
+                  Confirm & Submit
                 </button>
-                <button className="w-full rounded-2xl border border-blue-300 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700 hover:bg-blue-100">
+                <button className="w-full rounded-2xl border border-green-300 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 hover:bg-green-100">
                   Save as Draft
                 </button>
                 <button className="w-full rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-100">
-                  Cancel Booking
+                  Delete Ticket
                 </button>
               </div>
             </div>
@@ -138,9 +150,9 @@ export default function BookingPreviewPage() {
 
 function InfoCard({ label, value }) {
   return (
-    <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-white to-blue-50 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">{label}</p>
-      <p className="mt-2 text-sm font-medium leading-6 text-gray-900">{value}</p>
+    <div className="rounded-2xl border border-green-100 bg-gradient-to-br from-white to-green-50 p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-green-600">{label}</p>
+      <p className="mt-2 text-sm font-medium leading-6 text-slate-900">{value}</p>
     </div>
   );
 }
@@ -148,7 +160,7 @@ function InfoCard({ label, value }) {
 function SummaryRow({ label, value }) {
   return (
     <div className="flex items-center justify-between border-b border-white/20 pb-3 text-sm last:border-none last:pb-0">
-      <span className="text-blue-100">{label}</span>
+      <span className="text-green-100">{label}</span>
       <span className="font-medium text-white">{value}</span>
     </div>
   );
