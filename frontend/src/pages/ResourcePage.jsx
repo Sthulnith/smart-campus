@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import API from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 
 function ResourcePage() {
+  const { isAdmin } = useAuth();
   const [resources, setResources] = useState([]);
   const [form, setForm] = useState({
     name: "",
@@ -63,6 +65,7 @@ function ResourcePage() {
       <h2 className="text-2xl font-bold">Resources</h2>
 
       {/* FORM */}
+      {isAdmin && (
       <div className="bg-white p-6 rounded-xl shadow-md">
         <h3 className="text-lg font-semibold mb-4">Add Resource</h3>
 
@@ -86,6 +89,7 @@ function ResourcePage() {
 
         </form>
       </div>
+      )}
 
       {/* LIST */}
       <div className="bg-white p-6 rounded-xl shadow-md">
@@ -98,7 +102,7 @@ function ResourcePage() {
           <span>Capacity</span>
           <span>Location</span>
           <span>Status</span>
-          <span>Actions</span>
+          <span>{isAdmin ? "Actions" : ""}</span>
         </div>
 
         {/* DATA */}
@@ -126,21 +130,23 @@ function ResourcePage() {
               </span>
 
               {/* ✅ BUTTONS INSIDE MAP */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => editResource(r)}
-                  className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600"
-                >
-                  Edit
-                </button>
+              {isAdmin && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => editResource(r)}
+                    className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600"
+                  >
+                    Edit
+                  </button>
 
-                <button
-                  onClick={() => deleteResource(r.id)}
-                  className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
-                >
-                  Delete
-                </button>
-              </div>
+                  <button
+                    onClick={() => deleteResource(r.id)}
+                    className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
 
             </div>
           ))}

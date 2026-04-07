@@ -123,8 +123,6 @@ function UserBookingPage() {
       {/* USER BOOKINGS */}
       <div className="bg-white p-6 rounded-xl shadow-md">
 
-        {/* ✅ HEADER + FILTER */}
-        {/* HEADER + FILTER */}
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">My Bookings</h3>
 
