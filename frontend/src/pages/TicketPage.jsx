@@ -75,6 +75,12 @@ function TicketPage() {
     fetchTickets();
   };
 
+  // ✅ FILE
+  const handleFileChange = (e) => {
+    setSelectedFile(e.target.files[0]);
+  };
+
+
   const uploadImage = async (id) => {
     const formData = new FormData();
     formData.append("files", selectedFile);
