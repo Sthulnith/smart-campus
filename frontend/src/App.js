@@ -5,36 +5,39 @@ import AdminRoute from "./components/AdminRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
-import { AuthProvider } from "./contexts/AuthContext";
-import AdminPage from "./pages/AdminPage";
-import AuthCallbackPage from "./pages/AuthCallbackPage";
-import LoginPage from "./pages/LoginPage";
-
+import UserBookingPage from "./pages/UserBookingPage";
+import AdminBookingPage from "./pages/AdminBookingPage";
 import ResourcePage from "./pages/ResourcePage";
 import BookingPage from "./pages/BookingPage";
 import TicketPage from "./pages/TicketPage";
 
 function AppLayout() {
   return (
-    <div className="flex">
-      <Sidebar />
-      <div className="flex-1 bg-gray-100 min-h-screen">
-        <Header />
-        <div className="p-6">
-          <Routes>
-            <Route path="/" element={<ResourcePage />} />
-            <Route path="/resources" element={<ResourcePage />} />
-            <Route path="/bookings" element={<BookingPage />} />
-            <Route path="/tickets" element={<TicketPage />} />
-            <Route
-              path="/admin"
-              element={
-                <AdminRoute>
-                  <AdminPage />
-                </AdminRoute>
-              }
-            />
-          </Routes>
+    <Router>
+     
+      <div className="flex">
+
+        {/* Sidebar */}
+        <Sidebar />
+
+        {/* Main Content */}
+        <div className="flex-1 bg-gray-100 min-h-screen">
+
+          <Header />
+
+          <div className="p-6">
+
+            <Routes>
+              <Route path="/" element={<ResourcePage />} />
+              <Route path="/resources" element={<ResourcePage />} />
+              <Route path="/bookings" element={<BookingPage />} />
+              <Route path="/tickets" element={<TicketPage />} />
+              <Route path="/user-bookings" element={<UserBookingPage />} />
+              <Route path="/admin-bookings" element={<AdminBookingPage />} />
+            </Routes>
+
+          </div>
+
         </div>
       </div>
     </div>

@@ -11,12 +11,12 @@ public class BookingController {
     
     @Autowired
     private BookingRepository bookingRepository;
-
+   
     @GetMapping
     public List<Booking> getAllBookings() {
         return bookingRepository.findAll();
     }
-
+    // Get booking by ID
     @PostMapping
     public Booking createBooking(@RequestBody Booking booking) {
 
