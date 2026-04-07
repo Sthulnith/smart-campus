@@ -7,7 +7,13 @@ function ProtectedRoute({ children }) {
   const location = useLocation();
 
   if (loading) {
-    return <div className="p-6">Checking authentication...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
+        <div className="bg-white rounded-xl shadow p-6 text-gray-700">
+          Checking authentication...
+        </div>
+      </div>
+    );
   }
 
   if (!user) {

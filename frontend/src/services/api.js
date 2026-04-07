@@ -5,4 +5,18 @@ const API = axios.create({
   withCredentials: true,
 });
 
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    const path = window.location?.pathname || "";
+
+    if (status === 401 && !path.startsWith("/login") && !path.startsWith("/auth/callback")) {
+      window.location.href = "/login";
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export default API;

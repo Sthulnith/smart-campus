@@ -35,10 +35,23 @@ function AuthCallbackPage() {
   }
 
   if (error) {
-    return <div className="p-6 text-red-600">{error}</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
+        <div className="w-full max-w-md bg-white rounded-xl shadow p-6">
+          <div className="text-red-600 font-semibold mb-2">Sign-in failed</div>
+          <div className="text-gray-700 text-sm">{error}</div>
+        </div>
+      </div>
+    );
   }
 
-  return <div className="p-6">Completing sign-in...</div>;
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
+      <div className="bg-white rounded-xl shadow p-6 text-gray-700">
+        Completing sign-in...
+      </div>
+    </div>
+  );
 }
 
 export default AuthCallbackPage;

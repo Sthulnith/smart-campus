@@ -1,6 +1,7 @@
 package com.smartcampus.backend.config;
 
 import com.smartcampus.backend.security.GoogleOAuth2UserService;
+import com.smartcampus.backend.security.OAuth2LoginFailureHandler;
 import com.smartcampus.backend.security.OAuth2LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +27,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             GoogleOAuth2UserService googleOAuth2UserService,
-            OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler
+            OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
+            OAuth2LoginFailureHandler oAuth2LoginFailureHandler
     ) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
@@ -80,6 +82,7 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(googleOAuth2UserService))
                         .successHandler(oAuth2LoginSuccessHandler)
+                        .failureHandler(oAuth2LoginFailureHandler)
                 )
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout")

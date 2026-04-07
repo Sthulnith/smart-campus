@@ -32,18 +32,28 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  const isAdmin = user?.role === "ROLE_ADMIN";
+  const hasRole = useCallback(
+    (role) => user?.role === role,
+    [user]
+  );
+
+  const isAdmin = hasRole("ROLE_ADMIN");
+  const isStudent = hasRole("ROLE_STUDENT");
+  const isStaff = hasRole("ROLE_STAFF");
 
   const value = useMemo(
     () => ({
       user,
       isAdmin,
+      isStudent,
+      isStaff,
+      hasRole,
       loading,
       fetchCurrentUser,
       logout,
       setUser,
     }),
-    [user, isAdmin, loading, fetchCurrentUser, logout]
+    [user, isAdmin, isStudent, isStaff, hasRole, loading, fetchCurrentUser, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
