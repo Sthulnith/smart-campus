@@ -19,6 +19,7 @@ Use `.env.example` as reference.
 
 - `GOOGLE_CLIENT_ID` (required)
 - `GOOGLE_CLIENT_SECRET` (required)
+- `APP_FRONTEND_URL` (recommended, defaults to `FRONTEND_URL`)
 - `FRONTEND_URL` (default `http://localhost:3000`)
 - `BACKEND_URL` (default `http://localhost:8080`)
 - `OAUTH2_REDIRECT_URL` (default `http://localhost:3000/auth/callback`)
@@ -29,12 +30,22 @@ Use `.env.example` as reference.
 - `DB_USERNAME`
 - `DB_PASSWORD`
 - `HIBERNATE_DIALECT` (optional)
+- `JPA_SHOW_SQL` (optional, default `false`)
 - `UPLOAD_DIR` (optional)
 
 ### Frontend env
 
 - `REACT_APP_API_BASE_URL` (default `http://localhost:8080/api`)
 - `REACT_APP_BACKEND_BASE_URL` (default `http://localhost:8080`)
+
+### Mail / Password Reset
+
+- `AUTH_RESET_DEMO_LINK` (`true` logs reset link in backend output for demo mode)
+- `MAIL_HOST`
+- `MAIL_PORT`
+- `MAIL_USERNAME`
+- `MAIL_PASSWORD`
+- `MAIL_FROM`
 
 ## Google Console Setup
 
@@ -89,6 +100,10 @@ Frontend: `http://localhost:3000`
 - `GET /api/auth/login` -> returns Google login URL
 - `GET /api/auth/me` -> current authenticated user
 - `POST /api/auth/logout` -> logout session
+- `POST /api/auth/register` -> normal user registration
+- `POST /api/admin/users` -> admin-only admin account creation
+- `POST /api/auth/forgot-password` -> password reset request
+- `POST /api/auth/reset-password` -> set new password from valid token
 
 ## RBAC Overview
 
@@ -96,4 +111,14 @@ Frontend: `http://localhost:3000`
 - API protection is enforced in `SecurityConfig`.
 - Resource write operations are admin-only.
 - Bookings and ticket creation/read are available to authenticated users.
+- `POST /api/admin/users` is restricted to `ROLE_ADMIN`.
+
+## Quick Flow Testing
+
+1. **Normal registration**: create account via `/register` and verify login.
+2. **Admin creation**: sign in as admin, open `/admin/create-admin`, create admin.
+3. **Password reset**:
+   - request reset from `/forgot-password`
+   - use demo-mode backend log link when `AUTH_RESET_DEMO_LINK=true`
+   - reset via `/reset-password` and sign in with new password.
 
