@@ -30,6 +30,28 @@ function TicketPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+    // ✅ CREATE / UPDATE
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (editingId) {
+      await API.put(`/tickets/${editingId}`, form);
+      setEditingId(null);
+    } else {
+      await API.post("/tickets", form);
+    }
+
+    setForm({
+      category: "",
+      description: "",
+      priority: "",
+      resourceId: "",
+      status: "OPEN"
+    });
+
+    fetchTickets();
+  };
+
   
 
   const uploadImage = async (id) => {
