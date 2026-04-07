@@ -9,6 +9,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -37,6 +38,17 @@ public class GlobalExceptionHandler {
                 "code", "ACCESS_DENIED",
                 "timestamp", Instant.now().toString()
         ));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleResponseStatus(ResponseStatusException ex) {
+        HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("error", status.getReasonPhrase());
+        body.put("message", ex.getReason() != null ? ex.getReason() : "Request failed.");
+        body.put("code", status == HttpStatus.BAD_REQUEST ? "BAD_REQUEST" : "HTTP_ERROR");
+        body.put("timestamp", Instant.now().toString());
+        return ResponseEntity.status(status).body(body);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

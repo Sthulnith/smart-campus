@@ -38,7 +38,12 @@ public class SecurityConfig {
                         .requestMatchers("/", "/error").permitAll()
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/signup", "/api/auth/signin").permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/auth/signup",
+                                "/api/auth/signin",
+                                "/api/auth/forgot-password",
+                                "/api/auth/reset-password"
+                        ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/api/resources/**").hasAnyRole("USER", "ADMIN")
