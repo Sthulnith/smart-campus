@@ -60,6 +60,21 @@ function TicketPage() {
     fetchTickets();
   };
 
+  // ✅ EDIT
+  const editTicket = (t) => {
+    setForm(t);
+    setEditingId(t.id);
+  };
+
+  // ✅ ASSIGN
+  const assignTechnician = async (id) => {
+    const techId = prompt("Enter Technician ID:");
+    if (!techId) return;
+
+    await API.put(`/tickets/${id}/assign?technicianId=${techId}`);
+    fetchTickets();
+  };
+
   const uploadImage = async (id) => {
     const formData = new FormData();
     formData.append("files", selectedFile);
