@@ -4,30 +4,36 @@ import API from "../services/api";
 import { AuthAlert, AuthCard, AuthShell } from "../components/AuthShell";
 import { getApiErrorMessage } from "../utils/authApi";
 
-const PWD_HINT = "8+ characters with upper, lower, and a number.";
+const PWD_HINT = "At least 8 characters with one letter and one number.";
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function RegisterPage() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
 
   const clientValidate = () => {
     if (!name.trim()) return "Enter your name.";
     if (!email.trim()) return "Enter your email.";
+    if (!EMAIL_REGEX.test(email.trim())) return "Enter a valid email address.";
     if (password.length < 8) return "Password must be at least 8 characters.";
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      return `Password needs upper, lower, and a number. (${PWD_HINT})`;
+    if (!/(?=.*[A-Za-z])(?=.*\d)/.test(password)) {
+      return "Password must include at least one letter and one number.";
     }
+    if (password !== confirmPassword) return "Passwords do not match.";
     return null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setSuccess(false);
     const v = clientValidate();
     if (v) {
       setError(v);
@@ -40,7 +46,10 @@ function RegisterPage() {
         email: email.trim(),
         password,
       });
-      navigate("/login", { replace: true, state: { signupSuccess: true } });
+      setSuccess(true);
+      setTimeout(() => {
+        navigate("/login", { replace: true, state: { signupSuccess: true } });
+      }, 1300);
     } catch (err) {
       setError(getApiErrorMessage(err, "Could not create your account."));
     } finally {
@@ -60,6 +69,7 @@ function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="px-8 pb-8 pt-4 space-y-4" noValidate aria-busy={submitting}>
+          {success && <AuthAlert variant="success">Account created successfully. Redirecting to sign in…</AuthAlert>}
           {error && <AuthAlert variant="error">{error}</AuthAlert>}
 
           <div>
@@ -121,6 +131,23 @@ function RegisterPage() {
               </button>
             </div>
             <p className="text-xs text-slate-500 mt-1.5">{PWD_HINT}</p>
+          </div>
+
+          <div>
+            <label htmlFor="register-confirm-password" className="block text-sm font-medium text-slate-700 mb-1.5">
+              Confirm password
+            </label>
+            <input
+              id="register-confirm-password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none disabled:bg-slate-50"
+              placeholder="Repeat password"
+              required
+              disabled={submitting}
+            />
           </div>
 
           <button

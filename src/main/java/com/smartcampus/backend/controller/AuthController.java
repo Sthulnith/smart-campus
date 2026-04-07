@@ -106,10 +106,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody UserRegisterRequest request) {
         userService.registerUser(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "message", "Account created. You can sign in now.",
-                "timestamp", Instant.now().toString()
-        ));
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Account created successfully"));
     }
 
     @PostMapping("/signin")

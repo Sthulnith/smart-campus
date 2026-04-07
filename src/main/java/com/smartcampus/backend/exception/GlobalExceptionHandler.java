@@ -40,6 +40,14 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(EmailInUseException.class)
+    public ResponseEntity<Map<String, Object>> handleEmailInUse(EmailInUseException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("message", "Email already in use");
+        body.put("code", "EMAIL_IN_USE");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, Object>> handleResponseStatus(ResponseStatusException ex) {
         HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
