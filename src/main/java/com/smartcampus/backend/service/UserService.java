@@ -23,6 +23,15 @@ public class UserService {
 
     @Transactional
     public void registerUser(UserRegisterRequest request) {
+        createLocalUser(request, UserRole.ROLE_USER);
+    }
+
+    @Transactional
+    public void createAdminUser(UserRegisterRequest request) {
+        createLocalUser(request, UserRole.ROLE_ADMIN);
+    }
+
+    private void createLocalUser(UserRegisterRequest request, UserRole role) {
         String email = request.getEmail().trim().toLowerCase();
         if (userRepository.findByEmail(email).isPresent()) {
             throw new EmailInUseException("Email already in use");
@@ -34,7 +43,7 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setProvider(AuthProviders.LOCAL);
         user.setProviderId(null);
-        user.setRole(UserRole.ROLE_USER);
+        user.setRole(role);
         user.setActive(true);
         userRepository.save(user);
     }
