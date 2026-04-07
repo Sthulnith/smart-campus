@@ -1,16 +1,24 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
+import { AuthCard, AuthShell } from "./AuthShell";
 import { useAuth } from "../contexts/AuthContext";
 
 function AdminRoute({ children }) {
   const { user, isAdmin, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
-    return <div className="p-6">Checking authorization...</div>;
+    return (
+      <AuthShell>
+        <AuthCard>
+          <div className="p-8 text-center text-sm text-slate-700">Checking admin access…</div>
+        </AuthCard>
+      </AuthShell>
+    );
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   if (!isAdmin) {

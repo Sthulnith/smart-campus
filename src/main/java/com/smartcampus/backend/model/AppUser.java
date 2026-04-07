@@ -24,8 +24,14 @@ public class AppUser {
     @Column(nullable = false, unique = true)
     private String email;
 
+    /**
+     * Display name (full name). Same value is exposed as "name" in API responses.
+     */
     @Column(nullable = false)
     private String name;
+
+    @Column(name = "password_hash")
+    private String passwordHash;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -34,8 +40,11 @@ public class AppUser {
     @Column(nullable = false)
     private String provider;
 
-    @Column(nullable = false)
+    @Column
     private String providerId;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -101,6 +110,22 @@ public class AppUser {
 
     public void setProviderId(String providerId) {
         this.providerId = providerId;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     public Instant getCreatedAt() {
