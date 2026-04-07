@@ -30,7 +30,7 @@ function TicketPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-    // ✅ CREATE / UPDATE
+  // ✅ CREATE / UPDATE
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -52,7 +52,13 @@ function TicketPage() {
     fetchTickets();
   };
 
-  
+  // ✅ DELETE
+  const deleteTicket = async (id) => {
+    if (!window.confirm("Delete this ticket?")) return;
+
+    await API.delete(`/tickets/${id}`);
+    fetchTickets();
+  };
 
   const uploadImage = async (id) => {
     const formData = new FormData();
