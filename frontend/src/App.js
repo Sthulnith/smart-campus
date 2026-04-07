@@ -1,6 +1,8 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-dom";
 
+import AdminRoute from "./components/AdminRoute";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import UserBookingPage from "./pages/UserBookingPage";
@@ -9,7 +11,7 @@ import ResourcePage from "./pages/ResourcePage";
 import BookingPage from "./pages/BookingPage";
 import TicketPage from "./pages/TicketPage";
 
-function App() {
+function AppLayout() {
   return (
     <Router>
      
@@ -38,7 +40,29 @@ function App() {
 
         </div>
       </div>
-    </Router>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route
+            path="/*"
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
