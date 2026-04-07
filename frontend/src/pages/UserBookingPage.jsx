@@ -5,6 +5,7 @@ function UserBookingPage() {
   const [bookings, setBookings] = useState([]);
   const [resources, setResources] = useState([]);
   const [statusFilter, setStatusFilter] = useState("ALL"); // ✅ NEW
+  const [statusFilter, setStatusFilter] = useState("ALL");
 
   const [form, setForm] = useState({
     resourceId: "",
@@ -59,8 +60,8 @@ function UserBookingPage() {
     }
   };
 
-  // ✅ NEW: Cancel Booking
   // ✅ Cancel Booking
+  // Cancel Booking
   const cancelBooking = async (id, status) => {
     if (status === "CANCELLED") {
       alert("Already cancelled!");
@@ -77,6 +78,7 @@ function UserBookingPage() {
   };
 
   // ✅ FILTER LOGIC
+  // Filter logic
   const filteredBookings =
     statusFilter === "ALL"
       ? bookings
@@ -120,6 +122,7 @@ function UserBookingPage() {
 
       {/* USER BOOKINGS */}
       <div className="bg-white p-6 rounded-xl shadow-md">
+
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">My Bookings</h3>
 
@@ -155,6 +158,48 @@ function UserBookingPage() {
                 <p className="text-sm">
                   Status:{" "}
                   <span className={
+        {/* ✅ EMPTY STATE */}
+        {filteredBookings.length === 0 ? (
+          <p className="text-center text-gray-500 py-6 italic">
+            No bookings found
+          </p>
+        ) : (
+          filteredBookings.map((b) => {
+            const resource = resources.find(r => r.id === b.resourceId);
+
+            return (
+              <div
+                key={b.id}
+                className="p-4 bg-gray-50 rounded-lg mb-2 flex justify-between items-center"
+              >
+
+                {/* INFO */}
+                <div>
+                  <p className="font-medium">
+                    Resource: {resource ? resource.name : b.resourceId}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {b.date} | {b.startTime} - {b.endTime}
+                  </p>
+                  <p className="text-sm">
+                    Status:{" "}
+                    <span className={
+                      b.status === "CANCELLED"
+                        ? "text-red-600"
+                        : b.status === "PENDING"
+                        ? "text-yellow-600"
+                        : "text-green-600"
+                    }>
+                      {b.status}
+                    </span>
+                  </p>
+                </div>
+
+                {/* ACTION */}
+                <button
+                  disabled={b.status === "CANCELLED"}
+                  onClick={() => cancelBooking(b.id, b.status)}
+                  className={`px-3 py-1 rounded text-white ${
                     b.status === "CANCELLED"
                       ? "text-red-600"
                       : b.status === "PENDING"
@@ -165,6 +210,12 @@ function UserBookingPage() {
                   </span>
                 </p>
               </div>
+                      ? "bg-gray-400"
+                      : "bg-red-600 hover:bg-red-700"
+                  }`}
+                >
+                  Cancel
+                </button>
 
               {/* ACTION */}
               <button
@@ -178,6 +229,10 @@ function UserBookingPage() {
               >
                 Cancel
               </button>
+              </div>
+            );
+          })
+        )}
 
             </div>
           );
