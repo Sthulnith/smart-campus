@@ -43,12 +43,24 @@ public class GoogleOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             );
         }
 
-        AppUser appUser = appUserRepository.findByEmail(email).orElseGet(AppUser::new);
+        String normalizedEmail = email.trim().toLowerCase();
+        AppUser appUser = appUserRepository.findByEmail(normalizedEmail).orElseGet(AppUser::new);
+
+        if (appUser.getId() != null
+                && AuthProviders.LOCAL.equalsIgnoreCase(appUser.getProvider())
+                && appUser.getPasswordHash() != null
+                && !appUser.getPasswordHash().isBlank()) {
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error("account_exists"),
+                    "This email is already registered with a password. Sign in with email instead."
+            );
+        }
+
         if (appUser.getRole() == null) {
             appUser.setRole(UserRole.ROLE_USER);
         }
-        appUser.setEmail(email);
-        appUser.setName(name != null ? name : email);
+        appUser.setEmail(normalizedEmail);
+        appUser.setName(name != null ? name : normalizedEmail);
         appUser.setProvider(provider);
         appUser.setProviderId(providerId);
         AppUser savedUser = appUserRepository.save(appUser);

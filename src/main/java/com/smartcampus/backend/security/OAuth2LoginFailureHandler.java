@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
@@ -29,8 +30,22 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
             HttpServletResponse response,
             AuthenticationException exception
     ) throws IOException, ServletException {
-        String message = URLEncoder.encode(exception.getMessage(), StandardCharsets.UTF_8);
+        String safe = sanitizeOauthFailureMessage(exception);
+        String message = URLEncoder.encode(safe, StandardCharsets.UTF_8);
         response.sendRedirect(frontendLoginUrl + "?error=oauth&message=" + message);
+    }
+
+    private static String sanitizeOauthFailureMessage(AuthenticationException exception) {
+        if (exception instanceof OAuth2AuthenticationException oauthEx && oauthEx.getError() != null) {
+            String code = oauthEx.getError().getErrorCode();
+            if ("account_exists".equals(code)) {
+                return "This email already has a password. Sign in with email instead.";
+            }
+            if ("invalid_user_info".equals(code)) {
+                return "Google did not share your email. Try another account.";
+            }
+        }
+        return "Google sign-in did not work. Try again or use email.";
     }
 }
 

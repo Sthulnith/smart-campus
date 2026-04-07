@@ -11,7 +11,14 @@ API.interceptors.response.use(
     const status = error?.response?.status;
     const path = window.location?.pathname || "";
 
-    if (status === 401 && !path.startsWith("/login") && !path.startsWith("/auth/callback")) {
+    const skipRedirect =
+      path.startsWith("/login") ||
+      path.startsWith("/signup") ||
+      path.startsWith("/forgot-password") ||
+      path.startsWith("/reset-password") ||
+      path.startsWith("/auth/callback");
+
+    if (status === 401 && !skipRedirect) {
       window.location.href = "/login";
     }
 

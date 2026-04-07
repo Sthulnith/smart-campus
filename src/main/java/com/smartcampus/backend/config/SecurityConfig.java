@@ -18,6 +18,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 
 @Configuration
 @EnableWebSecurity
@@ -37,6 +38,13 @@ public class SecurityConfig {
                         .requestMatchers("/", "/error").permitAll()
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/auth/register",
+                                "/api/auth/signup",
+                                "/api/auth/signin",
+                                "/api/auth/forgot-password",
+                                "/api/auth/reset-password"
+                        ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/api/resources/**").hasAnyRole("USER", "ADMIN")
@@ -62,7 +70,8 @@ public class SecurityConfig {
                                         response,
                                         HttpServletResponse.SC_UNAUTHORIZED,
                                         "Unauthorized",
-                                        "Authentication is required to access this resource.",
+                                        "Please sign in to continue.",
+                                        "NOT_AUTHENTICATED",
                                         request.getRequestURI()
                                 );
                                 return;
@@ -74,7 +83,8 @@ public class SecurityConfig {
                                     response,
                                     HttpServletResponse.SC_FORBIDDEN,
                                     "Forbidden",
-                                    "You do not have permission to access this resource.",
+                                    "You don't have permission for this action.",
+                                    "ACCESS_DENIED",
                                     request.getRequestURI()
                             );
                         })
@@ -89,7 +99,9 @@ public class SecurityConfig {
                         .logoutSuccessHandler((request, response, authentication) -> {
                             response.setStatus(HttpServletResponse.SC_OK);
                             response.setContentType("application/json");
-                            response.getWriter().write("{\"message\":\"Logged out\"}");
+                            response.getWriter().write(
+                                    "{\"message\":\"Logged out\",\"timestamp\":\"" + Instant.now() + "\"}"
+                            );
                         })
                 );
 
@@ -116,17 +128,28 @@ public class SecurityConfig {
             int status,
             String error,
             String message,
+            String code,
             String path
     ) throws IOException {
         response.setStatus(status);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(
-                "{\"status\":" + status +
-                        ",\"error\":\"" + error +
-                        "\",\"message\":\"" + message +
-                        "\",\"path\":\"" + path +
-                        "\",\"timestamp\":\"" + Instant.now() + "\"}"
-        );
+        String safePath = path == null ? "" : jsonEscape(path);
+        response.getWriter().write(String.format(
+                Locale.ROOT,
+                "{\"error\":\"%s\",\"message\":\"%s\",\"code\":\"%s\",\"path\":\"%s\",\"timestamp\":\"%s\"}",
+                jsonEscape(error),
+                jsonEscape(message),
+                jsonEscape(code),
+                safePath,
+                Instant.now()
+        ));
+    }
+
+    private static String jsonEscape(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }

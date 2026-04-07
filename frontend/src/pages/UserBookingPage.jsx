@@ -120,11 +120,6 @@ function UserBookingPage() {
 
       {/* USER BOOKINGS */}
       <div className="bg-white p-6 rounded-xl shadow-md">
-        <h3 className="text-lg font-semibold mb-4">My Bookings</h3>
-
-        {bookings.map((b) => {
-          // ✅ Find resource name instead of ID
-        {/* ✅ HEADER + FILTER */}
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">My Bookings</h3>
 

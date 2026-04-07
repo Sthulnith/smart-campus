@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import API from "../services/api";
 
 const AuthContext = createContext(null);
+const AUTH_RETURN_KEY = "authReturnTo";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -28,8 +29,25 @@ export function AuthProvider({ children }) {
   }, [fetchCurrentUser]);
 
   const logout = useCallback(async () => {
-    await API.post("/auth/logout");
-    setUser(null);
+    try {
+      await API.post("/auth/logout");
+    } finally {
+      try {
+        sessionStorage.removeItem(AUTH_RETURN_KEY);
+      } catch {
+        /* ignore */
+      }
+      setUser(null);
+    }
+  }, []);
+
+  const signInWithPassword = useCallback(async (email, password) => {
+    await API.post("/auth/signin", { email, password });
+    return fetchCurrentUser();
+  }, [fetchCurrentUser]);
+
+  const signUp = useCallback(async (payload) => {
+    await API.post("/auth/signup", payload);
   }, []);
 
   const hasRole = useCallback(
@@ -51,9 +69,11 @@ export function AuthProvider({ children }) {
       loading,
       fetchCurrentUser,
       logout,
+      signInWithPassword,
+      signUp,
       setUser,
     }),
-    [user, isAdmin, isStudent, isStaff, hasRole, loading, fetchCurrentUser, logout]
+    [user, isAdmin, isStudent, isStaff, hasRole, loading, fetchCurrentUser, logout, signInWithPassword, signUp]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
