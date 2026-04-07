@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import API from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 
 function TicketPage() {
+  const { isAdmin } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [editingId, setEditingId] = useState(null);
 
@@ -149,19 +151,23 @@ function TicketPage() {
                   Edit
                 </button>
 
-                <button
-                  onClick={() => deleteTicket(t.id)}
-                  className="bg-red-500 text-white px-3 py-1 rounded"
-                >
-                  Delete
-                </button>
+                {isAdmin && (
+                  <>
+                    <button
+                      onClick={() => deleteTicket(t.id)}
+                      className="bg-red-500 text-white px-3 py-1 rounded"
+                    >
+                      Delete
+                    </button>
 
-                <button
-                  onClick={() => assignTechnician(t.id)}
-                  className="bg-blue-500 text-white px-3 py-1 rounded"
-                >
-                  Assign
-                </button>
+                    <button
+                      onClick={() => assignTechnician(t.id)}
+                      className="bg-blue-500 text-white px-3 py-1 rounded"
+                    >
+                      Assign
+                    </button>
+                  </>
+                )}
 
                 <input type="file" onChange={handleFileChange} />
 
