@@ -14,6 +14,8 @@ API.interceptors.response.use(
     const skipRedirect =
       path.startsWith("/login") ||
       path.startsWith("/signup") ||
+      path.startsWith("/forgot-password") ||
+      path.startsWith("/reset-password") ||
       path.startsWith("/auth/callback");
 
     if (status === 401 && !skipRedirect) {

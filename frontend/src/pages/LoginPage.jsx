@@ -41,14 +41,15 @@ function LoginPage() {
 
   const from = location.state?.from;
   const signupSuccess = location.state?.signupSuccess;
+  const passwordResetDone = location.state?.passwordReset;
 
   useEffect(() => {
     if (from) {
       storeReturnPath(from);
-    } else if (!signupSuccess) {
+    } else if (!signupSuccess && !passwordResetDone) {
       sessionStorage.removeItem(AUTH_RETURN_KEY);
     }
-  }, [from, signupSuccess]);
+  }, [from, signupSuccess, passwordResetDone]);
 
   const oauthError = useMemo(() => {
     const error = searchParams.get("error");
@@ -98,6 +99,10 @@ function LoginPage() {
         </div>
 
         <div className="px-8 space-y-6 pb-8 pt-4">
+          {passwordResetDone && (
+            <AuthAlert variant="success">Password updated. Sign in with your new password.</AuthAlert>
+          )}
+
           {signupSuccess && (
             <AuthAlert variant="success">Account created. Sign in with your email and password.</AuthAlert>
           )}
@@ -195,8 +200,10 @@ function LoginPage() {
             </div>
 
             <p className="text-xs text-slate-500 leading-relaxed">
-              <span className="text-slate-600 font-medium">Forgot password?</span> Email reset is not available yet.
-              Contact an admin if you are locked out.
+              <Link to="/forgot-password" className="font-semibold text-blue-600 hover:text-blue-700">
+                Forgot password?
+              </Link>{" "}
+              <span className="text-slate-500">— for campus email/password accounts.</span>
             </p>
 
             <button

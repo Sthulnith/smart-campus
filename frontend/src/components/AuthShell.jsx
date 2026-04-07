@@ -24,10 +24,10 @@ export function AuthCard({ children, className = "" }) {
 export function AuthAlert({ variant, children }) {
   const styles =
     variant === "success"
-      ? "bg-emerald-50 text-emerald-900 border-emerald-200/80"
+      ? "bg-emerald-50 text-emerald-900 border border-emerald-200/80"
       : variant === "error"
-        ? "bg-red-50 text-red-900 border-red-200/80"
-        : "bg-amber-50 text-amber-900 border-amber-200/80";
+        ? "bg-red-50 text-red-900 border border-red-200/80"
+        : "bg-amber-50 text-amber-900 border border-amber-200/80";
 
   return (
     <div

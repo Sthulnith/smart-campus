@@ -8,6 +8,8 @@ import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import UserBookingPage from "./pages/UserBookingPage";
 import AdminBookingPage from "./pages/AdminBookingPage";
@@ -52,6 +54,9 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route
             path="/*"
