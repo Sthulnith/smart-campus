@@ -3,8 +3,11 @@ import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-d
 
 import AdminRoute from "./components/AdminRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "./contexts/AuthContext";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
+import LoginPage from "./pages/LoginPage";
+import AuthCallbackPage from "./pages/AuthCallbackPage";
 import UserBookingPage from "./pages/UserBookingPage";
 import AdminBookingPage from "./pages/AdminBookingPage";
 import ResourcePage from "./pages/ResourcePage";
@@ -13,31 +16,28 @@ import TicketPage from "./pages/TicketPage";
 
 function AppLayout() {
   return (
-    <Router>
-     
-      <div className="flex">
+    <div className="flex">
+      <Sidebar />
 
-        {/* Sidebar */}
-        <Sidebar />
+      <div className="flex-1 bg-gray-100 min-h-screen">
+        <Header />
 
-        {/* Main Content */}
-        <div className="flex-1 bg-gray-100 min-h-screen">
-
-          <Header />
-
-          <div className="p-6">
-
-            <Routes>
-              <Route path="/" element={<ResourcePage />} />
-              <Route path="/resources" element={<ResourcePage />} />
-              <Route path="/bookings" element={<BookingPage />} />
-              <Route path="/tickets" element={<TicketPage />} />
-              <Route path="/user-bookings" element={<UserBookingPage />} />
-              <Route path="/admin-bookings" element={<AdminBookingPage />} />
-            </Routes>
-
-          </div>
-
+        <div className="p-6">
+          <Routes>
+            <Route path="/" element={<ResourcePage />} />
+            <Route path="/resources" element={<ResourcePage />} />
+            <Route path="/bookings" element={<BookingPage />} />
+            <Route path="/tickets" element={<TicketPage />} />
+            <Route path="/user-bookings" element={<UserBookingPage />} />
+            <Route
+              path="/admin-bookings"
+              element={
+                <AdminRoute>
+                  <AdminBookingPage />
+                </AdminRoute>
+              }
+            />
+          </Routes>
         </div>
       </div>
     </div>
