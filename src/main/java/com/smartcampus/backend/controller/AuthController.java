@@ -2,11 +2,13 @@ package com.smartcampus.backend.controller;
 
 import com.smartcampus.backend.dto.SigninRequest;
 import com.smartcampus.backend.dto.SignupRequest;
+import com.smartcampus.backend.dto.UserRegisterRequest;
 import com.smartcampus.backend.model.AppUser;
 import com.smartcampus.backend.model.UserRole;
 import com.smartcampus.backend.repository.AppUserRepository;
 import com.smartcampus.backend.security.AppUserDetails;
 import com.smartcampus.backend.security.AuthProviders;
+import com.smartcampus.backend.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -47,6 +49,7 @@ public class AuthController {
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final UserService userService;
     private final SecurityContextHolderStrategy securityContextHolderStrategy;
     private final SecurityContextRepository securityContextRepository;
     private final String backendUrl;
@@ -55,11 +58,13 @@ public class AuthController {
             AppUserRepository appUserRepository,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authenticationManager,
+            UserService userService,
             @Value("${app.backend-url:http://localhost:8080}") String backendUrl
     ) {
         this.appUserRepository = appUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
+        this.userService = userService;
         this.securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
         this.securityContextRepository = new HttpSessionSecurityContextRepository();
         this.backendUrl = backendUrl;
@@ -92,6 +97,15 @@ public class AuthController {
         user.setActive(true);
         appUserRepository.save(user);
 
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "message", "Account created. You can sign in now.",
+                "timestamp", Instant.now().toString()
+        ));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody UserRegisterRequest request) {
+        userService.registerUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                 "message", "Account created. You can sign in now.",
                 "timestamp", Instant.now().toString()

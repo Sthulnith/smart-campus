@@ -217,8 +217,8 @@ function LoginPage() {
 
           <p className="text-center text-sm text-slate-600 pt-1">
             New here?{" "}
-            <Link to="/signup" className="font-semibold text-blue-600 hover:text-blue-700">
-              Create an account
+            <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-700">
+              Register
             </Link>
           </p>
         </div>
