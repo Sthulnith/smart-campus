@@ -30,55 +30,7 @@ function TicketPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // ✅ CREATE / UPDATE
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (editingId) {
-      await API.put(`/tickets/${editingId}`, form);
-      setEditingId(null);
-    } else {
-      await API.post("/tickets", form);
-    }
-
-    setForm({
-      category: "",
-      description: "",
-      priority: "",
-      resourceId: "",
-      status: "OPEN"
-    });
-
-    fetchTickets();
-  };
-
-  // ✅ DELETE
-  const deleteTicket = async (id) => {
-    if (!window.confirm("Delete this ticket?")) return;
-
-    await API.delete(`/tickets/${id}`);
-    fetchTickets();
-  };
-
-  // ✅ EDIT
-  const editTicket = (t) => {
-    setForm(t);
-    setEditingId(t.id);
-  };
-
-  // ✅ ASSIGN
-  const assignTechnician = async (id) => {
-    const techId = prompt("Enter Technician ID:");
-    if (!techId) return;
-
-    await API.put(`/tickets/${id}/assign?technicianId=${techId}`);
-    fetchTickets();
-  };
-
-  // ✅ FILE
-  const handleFileChange = (e) => {
-    setSelectedFile(e.target.files[0]);
-  };
+  
 
   const uploadImage = async (id) => {
     const formData = new FormData();
