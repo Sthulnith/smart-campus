@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.MailException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +33,7 @@ public class PasswordResetService {
     private final AppUserRepository appUserRepository;
     private final PasswordResetTokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordResetMailService passwordResetMailService;
 
     private final String frontendBaseUrl;
     private final boolean demoResetLinkEnabled;
@@ -40,12 +42,14 @@ public class PasswordResetService {
             AppUserRepository appUserRepository,
             PasswordResetTokenRepository tokenRepository,
             PasswordEncoder passwordEncoder,
+            PasswordResetMailService passwordResetMailService,
             @Value("${app.frontend-url:http://localhost:3000}") String frontendBaseUrl,
             @Value("${app.auth.reset-demo-link-enabled:false}") boolean demoResetLinkEnabled
     ) {
         this.appUserRepository = appUserRepository;
         this.tokenRepository = tokenRepository;
         this.passwordEncoder = passwordEncoder;
+        this.passwordResetMailService = passwordResetMailService;
         this.frontendBaseUrl = frontendBaseUrl.replaceAll("/$", "");
         this.demoResetLinkEnabled = demoResetLinkEnabled;
     }
@@ -73,9 +77,16 @@ public class PasswordResetService {
                 entity.setUsed(false);
                 tokenRepository.save(entity);
 
+                String resetLink = buildResetLink(raw);
                 if (demoResetLinkEnabled) {
-                    String resetLink = buildResetLink(raw);
                     log.warn("[DEMO] Password reset link (do not enable in production): {}", resetLink);
+                } else {
+                    try {
+                        passwordResetMailService.sendPasswordResetEmail(user.getEmail(), resetLink);
+                    } catch (MailException ex) {
+                        // Keep a generic API response to avoid account enumeration leaks.
+                        log.warn("Password reset email was not delivered for a local account.");
+                    }
                 }
                 log.info("Password reset requested for local account (email redacted).");
             }

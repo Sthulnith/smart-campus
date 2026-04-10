@@ -1,32 +1,40 @@
 package com.smartcampus.backend.service;
 
 import com.smartcampus.backend.dto.UserRegisterRequest;
+import com.smartcampus.backend.exception.EmailInUseException;
 import com.smartcampus.backend.model.AppUser;
 import com.smartcampus.backend.model.UserRole;
-import com.smartcampus.backend.repository.AppUserRepository;
+import com.smartcampus.backend.repository.UserRepository;
 import com.smartcampus.backend.security.AuthProviders;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class UserService {
 
-    private final AppUserRepository appUserRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(AppUserRepository appUserRepository, PasswordEncoder passwordEncoder) {
-        this.appUserRepository = appUserRepository;
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
     public void registerUser(UserRegisterRequest request) {
+        createLocalUser(request, UserRole.ROLE_USER);
+    }
+
+    @Transactional
+    public void createAdminUser(UserRegisterRequest request) {
+        createLocalUser(request, UserRole.ROLE_ADMIN);
+    }
+
+    private void createLocalUser(UserRegisterRequest request, UserRole role) {
         String email = request.getEmail().trim().toLowerCase();
-        if (appUserRepository.findByEmail(email).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "This email is already registered.");
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new EmailInUseException("Email already in use");
         }
 
         AppUser user = new AppUser();
@@ -35,9 +43,9 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setProvider(AuthProviders.LOCAL);
         user.setProviderId(null);
-        user.setRole(UserRole.ROLE_USER);
+        user.setRole(role);
         user.setActive(true);
-        appUserRepository.save(user);
+        userRepository.save(user);
     }
 }
 

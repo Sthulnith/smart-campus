@@ -51,16 +51,28 @@ function Sidebar() {
         </NavLink>
 
         {isAdmin && (
-          <NavLink
-            to="/admin"
-            className={({ isActive }) =>
-              isActive
-                ? "block bg-blue-600 p-2 rounded"
-                : "block hover:bg-blue-600 p-2 rounded"
-            }
-          >
-            Admin
-          </NavLink>
+          <>
+            <NavLink
+              to="/admin-bookings"
+              className={({ isActive }) =>
+                isActive
+                  ? "block bg-blue-600 p-2 rounded"
+                  : "block hover:bg-blue-600 p-2 rounded"
+              }
+            >
+              Admin Bookings
+            </NavLink>
+            <NavLink
+              to="/admin/create-admin"
+              className={({ isActive }) =>
+                isActive
+                  ? "block bg-blue-600 p-2 rounded"
+                  : "block hover:bg-blue-600 p-2 rounded"
+              }
+            >
+              Create Admin
+            </NavLink>
+          </>
         )}
 
       </nav>
