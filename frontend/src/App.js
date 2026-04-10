@@ -14,6 +14,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import UserBookingPage from "./pages/UserBookingPage";
 import AdminBookingPage from "./pages/AdminBookingPage";
+import AdminCreateAdminPage from "./pages/AdminCreateAdminPage";
 import ResourcePage from "./pages/ResourcePage";
 import BookingPage from "./pages/BookingPage";
 import TicketPage from "./pages/TicketPage";
@@ -38,6 +39,14 @@ function AppLayout() {
               element={
                 <AdminRoute>
                   <AdminBookingPage />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/create-admin"
+              element={
+                <AdminRoute>
+                  <AdminCreateAdminPage />
                 </AdminRoute>
               }
             />
