@@ -13,10 +13,6 @@ function AdminBookingPage() {
     setBookings(res.data);
   };
 
-  // CANCEL
-  const cancelBooking = async (id) => {
-    await API.put(`/bookings/${id}/cancel`);
-    fetchBookings();
   // ✅ APPROVE
   const approveBooking = async (id) => {
     try {
@@ -28,15 +24,6 @@ function AdminBookingPage() {
     }
   };
 
-  // EDIT
-  const editBooking = async (b) => {
-    const updated = {
-      ...b,
-      purpose: prompt("New Purpose", b.purpose),
-    };
-
-    await API.put(`/bookings/${b.id}`, updated);
-    fetchBookings();
   // ❌ REJECT (CANCEL)
   const cancelBooking = async (id) => {
     try {
@@ -60,7 +47,6 @@ function AdminBookingPage() {
             <p>Resource: {b.resourceId}</p>
             <p>User: {b.userId}</p>
             <p>{b.date} | {b.startTime} - {b.endTime}</p>
-            <p>Status: {b.status}</p>
 
             <p>
               Status:{" "}
@@ -78,19 +64,6 @@ function AdminBookingPage() {
 
           {/* ACTION BUTTONS */}
           <div className="flex gap-2">
-            <button
-              onClick={() => editBooking(b)}
-              className="bg-yellow-500 text-white px-2 py-1 rounded"
-            >
-              Edit
-            </button>
-
-            <button
-              onClick={() => cancelBooking(b.id)}
-              className="bg-red-600 text-white px-2 py-1 rounded"
-            >
-              Cancel
-            </button>
 
             {/* ✅ ONLY SHOW IF PENDING */}
             {b.status === "PENDING" && (
