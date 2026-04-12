@@ -5,6 +5,7 @@ function UserBookingPage() {
   const [bookings, setBookings] = useState([]);
   const [resources, setResources] = useState([]);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     resourceId: "",
@@ -25,6 +26,16 @@ function UserBookingPage() {
     const userId = localStorage.getItem("userId");
     const res = await API.get(`/bookings/user/${userId}`);
     setBookings(res.data);
+    try {
+      setLoading(true);
+      const userId = localStorage.getItem("userId");
+      const res = await API.get(`/bookings/user/${userId}`);
+      setBookings(res.data);
+    } catch (err) {
+      alert("Failed to load bookings");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchResources = async () => {
@@ -65,6 +76,8 @@ function UserBookingPage() {
       alert("Already cancelled!");
       return;
     }
+
+    if (!window.confirm("Are you sure to cancel this booking?")) return;
 
     try {
       await API.put(`/bookings/${id}/cancel`);
@@ -140,6 +153,9 @@ function UserBookingPage() {
         {filteredBookings.length === 0 ? (
           <p className="text-center text-gray-500 py-6 italic">
             No bookings found
+        {loading ? (
+          <p className="text-center text-blue-500 py-4">
+            Loading bookings...
           </p>
         ) : (
           filteredBookings.map((b) => {
@@ -149,6 +165,15 @@ function UserBookingPage() {
               <div
                 key={b.id}
                 className="p-4 bg-gray-50 rounded-lg mb-2 flex justify-between items-center"
+          <>
+            {/* HEADER + FILTER */}
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">My Bookings</h3>
+
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="border p-2 rounded-lg"
               >
 
                 {/* INFO */}
@@ -189,6 +214,68 @@ function UserBookingPage() {
               </div>
             );
           })
+                <option value="ALL">All</option>
+                <option value="PENDING">Pending</option>
+                <option value="APPROVED">Approved</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            </div>
+
+            {/* EMPTY STATE */}
+            {filteredBookings.length === 0 ? (
+              <p className="text-center text-gray-500 py-6 italic">
+                No bookings found
+              </p>
+            ) : (
+              filteredBookings.map((b) => {
+                const resource = resources.find(r => r.id === b.resourceId);
+
+                return (
+                  <div
+                    key={b.id}
+                    className="p-4 bg-gray-50 rounded-lg mb-2 flex justify-between items-center"
+                  >
+
+                    {/* INFO */}
+                    <div>
+                      <p className="font-medium">
+                        Resource: {resource ? resource.name : b.resourceId}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {b.date} | {b.startTime} - {b.endTime}
+                      </p>
+                      <p className="text-sm">
+                        Status:{" "}
+                        <span className={
+                          b.status === "CANCELLED"
+                            ? "text-red-600"
+                            : b.status === "PENDING"
+                            ? "text-yellow-600"
+                            : "text-green-600"
+                        }>
+                          {b.status}
+                        </span>
+                      </p>
+                    </div>
+
+                    {/* ACTION */}
+                    <button
+                      disabled={b.status === "CANCELLED"}
+                      onClick={() => cancelBooking(b.id, b.status)}
+                      className={`px-3 py-1 rounded text-white ${
+                        b.status === "CANCELLED"
+                          ? "bg-gray-400"
+                          : "bg-red-600 hover:bg-red-700"
+                      }`}
+                    >
+                      Cancel
+                    </button>
+
+                  </div>
+                );
+              })
+            )}
+          </>
         )}
 
       </div>
