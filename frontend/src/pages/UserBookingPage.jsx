@@ -89,10 +89,15 @@ function UserBookingPage() {
   };
 
   // Filter logic
+  // ✅ FILTER + SORT
   const filteredBookings =
     statusFilter === "ALL"
       ? bookings
       : bookings.filter((b) => b.status === statusFilter);
+
+  const sortedBookings = [...filteredBookings].sort(
+    (a, b) => new Date(a.date) - new Date(b.date)
+  );
 
   return (
     <div className="space-y-6">
@@ -118,6 +123,16 @@ function UserBookingPage() {
           </select>
 
           <input type="date" name="date" value={form.date} onChange={handleChange} className="border p-2 rounded-lg" />
+          {/* ✅ DISABLE PAST DATES */}
+          <input
+            type="date"
+            name="date"
+            min={new Date().toISOString().split("T")[0]}
+            value={form.date}
+            onChange={handleChange}
+            className="border p-2 rounded-lg"
+          />
+
           <input type="time" name="startTime" value={form.startTime} onChange={handleChange} className="border p-2 rounded-lg" />
           <input type="time" name="endTime" value={form.endTime} onChange={handleChange} className="border p-2 rounded-lg" />
           <input name="purpose" placeholder="Purpose" value={form.purpose} onChange={handleChange} className="border p-2 rounded-lg" />
@@ -168,6 +183,7 @@ function UserBookingPage() {
           <>
             {/* HEADER + FILTER */}
             <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-2">
               <h3 className="text-lg font-semibold">My Bookings</h3>
 
               <select
@@ -221,13 +237,20 @@ function UserBookingPage() {
               </select>
             </div>
 
+            {/* ✅ BOOKING COUNT */}
+            <p className="text-sm text-gray-500 mb-4">
+              Total: {filteredBookings.length} bookings
+            </p>
+
             {/* EMPTY STATE */}
             {filteredBookings.length === 0 ? (
+            {sortedBookings.length === 0 ? (
               <p className="text-center text-gray-500 py-6 italic">
                 No bookings found
               </p>
             ) : (
               filteredBookings.map((b) => {
+              sortedBookings.map((b) => {
                 const resource = resources.find(r => r.id === b.resourceId);
 
                 return (
