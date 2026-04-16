@@ -5,6 +5,7 @@ function UserBookingPage() {
   const [bookings, setBookings] = useState([]);
   const [resources, setResources] = useState([]);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [search, setSearch] = useState(""); // ✅ NEW
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
@@ -94,7 +95,13 @@ function UserBookingPage() {
     statusFilter === "ALL"
       ? bookings
       : bookings.filter((b) => b.status === statusFilter);
+  // ✅ FILTER (STATUS + SEARCH)
+  const filteredBookings = bookings.filter((b) =>
+    (statusFilter === "ALL" || b.status === statusFilter) &&
+    b.purpose.toLowerCase().includes(search.toLowerCase())
+  );
 
+  // ✅ SORT
   const sortedBookings = [...filteredBookings].sort(
     (a, b) => new Date(a.date) - new Date(b.date)
   );
@@ -184,7 +191,18 @@ function UserBookingPage() {
             {/* HEADER + FILTER */}
             <div className="flex justify-between items-center mb-4">
             <div className="flex justify-between items-center mb-2">
+            {/* HEADER + SEARCH + FILTER */}
+            <div className="flex justify-between items-center mb-2 gap-2">
+
               <h3 className="text-lg font-semibold">My Bookings</h3>
+
+              <input
+                type="text"
+                placeholder="Search purpose..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="border p-2 rounded-lg"
+              />
 
               <select
                 value={statusFilter}
@@ -278,6 +296,7 @@ function UserBookingPage() {
                         }>
                           {b.status}
                         </span>
+                        Status: {b.status}
                       </p>
                     </div>
 
