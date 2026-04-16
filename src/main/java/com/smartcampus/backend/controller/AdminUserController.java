@@ -26,7 +26,8 @@ public class AdminUserController {
     public ResponseEntity<Map<String, Object>> createAdmin(@Valid @RequestBody UserRegisterRequest request) {
         userService.createAdminUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "message", "Admin account created successfully"
+                "message", "Admin account created successfully",
+                "timestamp", java.time.Instant.now().toString()
         ));
     }
 }

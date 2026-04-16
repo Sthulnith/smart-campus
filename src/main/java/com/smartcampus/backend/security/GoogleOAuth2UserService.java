@@ -45,6 +45,7 @@ public class GoogleOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         String normalizedEmail = email.trim().toLowerCase();
         AppUser appUser = appUserRepository.findByEmail(normalizedEmail).orElseGet(AppUser::new);
+        boolean isNewOAuthUser = appUser.getId() == null;
 
         if (appUser.getId() != null
                 && AuthProviders.LOCAL.equalsIgnoreCase(appUser.getProvider())
@@ -56,7 +57,11 @@ public class GoogleOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             );
         }
 
-        if (appUser.getRole() == null) {
+        // Explicitly assign default role for new OAuth users,
+        // but preserve any existing role for already-known accounts.
+        if (isNewOAuthUser) {
+            appUser.setRole(UserRole.ROLE_USER);
+        } else if (appUser.getRole() == null) {
             appUser.setRole(UserRole.ROLE_USER);
         }
         appUser.setEmail(normalizedEmail);
