@@ -37,6 +37,7 @@ public class PasswordResetService {
 
     private final String frontendBaseUrl;
     private final boolean demoResetLinkEnabled;
+    private final long resetCooldownSeconds;
 
     public PasswordResetService(
             AppUserRepository appUserRepository,
@@ -44,7 +45,8 @@ public class PasswordResetService {
             PasswordEncoder passwordEncoder,
             PasswordResetMailService passwordResetMailService,
             @Value("${app.frontend-url:http://localhost:3000}") String frontendBaseUrl,
-            @Value("${app.auth.reset-demo-link-enabled:false}") boolean demoResetLinkEnabled
+            @Value("${app.auth.reset-demo-link-enabled:false}") boolean demoResetLinkEnabled,
+            @Value("${app.auth.reset-cooldown-seconds:60}") long resetCooldownSeconds
     ) {
         this.appUserRepository = appUserRepository;
         this.tokenRepository = tokenRepository;
@@ -52,6 +54,7 @@ public class PasswordResetService {
         this.passwordResetMailService = passwordResetMailService;
         this.frontendBaseUrl = frontendBaseUrl.replaceAll("/$", "");
         this.demoResetLinkEnabled = demoResetLinkEnabled;
+        this.resetCooldownSeconds = resetCooldownSeconds;
     }
 
     /**
@@ -65,6 +68,11 @@ public class PasswordResetService {
         if (userOpt.isPresent()) {
             AppUser user = userOpt.get();
             if (isLocalPasswordAccount(user)) {
+                if (isInCooldown(user.getId())) {
+                    log.info("Password reset request throttled by cooldown for local account.");
+                    return genericForgotResponse();
+                }
+
                 tokenRepository.invalidateUnusedForUser(user.getId());
 
                 String raw = TokenHasher.newRawToken();
@@ -85,13 +93,17 @@ public class PasswordResetService {
                         passwordResetMailService.sendPasswordResetEmail(user.getEmail(), resetLink);
                     } catch (MailException ex) {
                         // Keep a generic API response to avoid account enumeration leaks.
-                        log.warn("Password reset email was not delivered for a local account.");
+                        log.warn("Password reset email was not delivered for a local account. reason={}", ex.getClass().getSimpleName());
                     }
                 }
                 log.info("Password reset requested for local account (email redacted).");
             }
         }
 
+        return genericForgotResponse();
+    }
+
+    private Map<String, Object> genericForgotResponse() {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("message", "If an account exists with that email, reset instructions were sent.");
         body.put("code", "RESET_EMAIL_DISPATCHED");
@@ -116,7 +128,8 @@ public class PasswordResetService {
                         "This reset link is invalid or has expired."
                 ));
 
-        if (prt.isUsed() || prt.getExpiresAt().isBefore(Instant.now())) {
+        Instant now = Instant.now();
+        if (prt.isUsed() || prt.getExpiresAt().isBefore(now)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "This reset link is invalid or has expired."
@@ -134,9 +147,14 @@ public class PasswordResetService {
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         appUserRepository.save(user);
 
-        prt.setUsed(true);
-        tokenRepository.save(prt);
-        tokenRepository.invalidateUnusedForUser(user.getId());
+        int updated = tokenRepository.markUsedIfValid(prt.getId(), now);
+        if (updated == 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "This reset link is invalid or has expired."
+            );
+        }
+        tokenRepository.invalidateUnusedForUserExcluding(user.getId(), prt.getId());
 
         return Map.of(
                 "message", "Your password was updated. You can sign in now.",
@@ -149,6 +167,16 @@ public class PasswordResetService {
         return AuthProviders.LOCAL.equalsIgnoreCase(user.getProvider())
                 && user.getPasswordHash() != null
                 && !user.getPasswordHash().isBlank();
+    }
+
+    private boolean isInCooldown(Long userId) {
+        if (resetCooldownSeconds <= 0) {
+            return false;
+        }
+        return tokenRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
+                .map(token -> token.getCreatedAt() != null
+                        && token.getCreatedAt().plus(resetCooldownSeconds, ChronoUnit.SECONDS).isAfter(Instant.now()))
+                .orElse(false);
     }
 
     private String buildResetLink(String rawToken) {

@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 public class UserRegisterRequest {
 
     @NotBlank(message = "Please enter your name.")
-    @Size(max = 120, message = "Name is too long (max 120 characters).")
+    @Size(min = 2, max = 120, message = "Name must be between 2 and 120 characters.")
     private String name;
 
     @NotBlank(message = "Email is required.")
@@ -19,8 +19,8 @@ public class UserRegisterRequest {
     @NotBlank(message = "Password is required.")
     @Size(min = 8, max = 72, message = "Use 8 to 72 characters.")
     @Pattern(
-            regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$",
-            message = "Use at least one letter and one number."
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z\\d]).+$",
+            message = "Use upper, lower, number, and symbol (8+ characters)."
     )
     private String password;
 

@@ -44,6 +44,9 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
             if ("invalid_user_info".equals(code)) {
                 return "Google did not share your email. Try another account.";
             }
+            if ("account_disabled".equals(code)) {
+                return "This account is disabled. Contact an administrator.";
+            }
         }
         return "Google sign-in did not work. Try again or use email.";
     }

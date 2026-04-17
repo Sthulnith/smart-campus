@@ -23,29 +23,38 @@ public class UserService {
 
     @Transactional
     public void registerUser(UserRegisterRequest request) {
-        createLocalUser(request, UserRole.ROLE_USER);
+        registerLocalUser(request.getName(), request.getEmail(), request.getPassword(), UserRole.ROLE_USER);
     }
 
     @Transactional
     public void createAdminUser(UserRegisterRequest request) {
-        createLocalUser(request, UserRole.ROLE_ADMIN);
+        registerLocalUser(request.getName(), request.getEmail(), request.getPassword(), UserRole.ROLE_ADMIN);
     }
 
-    private void createLocalUser(UserRegisterRequest request, UserRole role) {
-        String email = request.getEmail().trim().toLowerCase();
+    @Transactional
+    public AppUser registerLocalUser(String rawName, String rawEmail, String rawPassword, UserRole role) {
+        String email = normalizeEmail(rawEmail);
         if (userRepository.findByEmail(email).isPresent()) {
             throw new EmailInUseException("Email already in use");
         }
 
         AppUser user = new AppUser();
-        user.setName(request.getName().trim());
+        user.setName(normalizeName(rawName));
         user.setEmail(email);
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setPasswordHash(passwordEncoder.encode(rawPassword));
         user.setProvider(AuthProviders.LOCAL);
         user.setProviderId(null);
         user.setRole(role);
         user.setActive(true);
-        userRepository.save(user);
+        return userRepository.save(user);
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null ? "" : email.trim().toLowerCase();
+    }
+
+    private String normalizeName(String name) {
+        return name == null ? "" : name.trim();
     }
 }
 

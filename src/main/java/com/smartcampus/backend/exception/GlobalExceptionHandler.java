@@ -43,8 +43,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EmailInUseException.class)
     public ResponseEntity<Map<String, Object>> handleEmailInUse(EmailInUseException ex) {
         Map<String, Object> body = new LinkedHashMap<>();
+        body.put("error", "Conflict");
         body.put("message", "Email already in use");
         body.put("code", "EMAIL_IN_USE");
+        body.put("timestamp", Instant.now().toString());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 

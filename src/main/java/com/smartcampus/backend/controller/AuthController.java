@@ -3,11 +3,12 @@ package com.smartcampus.backend.controller;
 import com.smartcampus.backend.dto.SigninRequest;
 import com.smartcampus.backend.dto.SignupRequest;
 import com.smartcampus.backend.dto.UserRegisterRequest;
+import com.smartcampus.backend.exception.EmailInUseException;
 import com.smartcampus.backend.model.AppUser;
 import com.smartcampus.backend.model.UserRole;
 import com.smartcampus.backend.repository.AppUserRepository;
 import com.smartcampus.backend.security.AppUserDetails;
-import com.smartcampus.backend.security.AuthProviders;
+import com.smartcampus.backend.security.RequestThrottleService;
 import com.smartcampus.backend.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,7 +26,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -47,24 +48,24 @@ import java.util.stream.Collectors;
 public class AuthController {
 
     private final AppUserRepository appUserRepository;
-    private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
+    private final RequestThrottleService requestThrottleService;
     private final SecurityContextHolderStrategy securityContextHolderStrategy;
     private final SecurityContextRepository securityContextRepository;
     private final String backendUrl;
 
     public AuthController(
             AppUserRepository appUserRepository,
-            PasswordEncoder passwordEncoder,
             AuthenticationManager authenticationManager,
             UserService userService,
+            RequestThrottleService requestThrottleService,
             @Value("${app.backend-url:http://localhost:8080}") String backendUrl
     ) {
         this.appUserRepository = appUserRepository;
-        this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.userService = userService;
+        this.requestThrottleService = requestThrottleService;
         this.securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
         this.securityContextRepository = new HttpSessionSecurityContextRepository();
         this.backendUrl = backendUrl;
@@ -78,35 +79,27 @@ public class AuthController {
     @PostMapping("/signup")
     @Transactional
     public ResponseEntity<Map<String, Object>> signup(@Valid @RequestBody SignupRequest request) {
-        String email = request.getEmail().trim().toLowerCase();
-        if (appUserRepository.findByEmail(email).isPresent()) {
+        try {
+            userService.registerLocalUser(
+                    request.getFullName(),
+                    request.getEmail(),
+                    request.getPassword(),
+                    UserRole.ROLE_USER
+            );
+        } catch (EmailInUseException ex) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(authBody(
                     "Conflict",
                     "This email is already registered. Sign in or use Google if you signed up that way.",
                     "EMAIL_IN_USE"
             ));
         }
-
-        AppUser user = new AppUser();
-        user.setEmail(email);
-        user.setName(request.getFullName().trim());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setProvider(AuthProviders.LOCAL);
-        user.setProviderId(null);
-        user.setRole(UserRole.ROLE_USER);
-        user.setActive(true);
-        appUserRepository.save(user);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "message", "Account created. You can sign in now.",
-                "timestamp", Instant.now().toString()
-        ));
+        return successBody(HttpStatus.CREATED, "Account created. You can sign in now.", "ACCOUNT_CREATED");
     }
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody UserRegisterRequest request) {
         userService.registerUser(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Account created successfully"));
+        return successBody(HttpStatus.CREATED, "Account created successfully", "ACCOUNT_CREATED");
     }
 
     @PostMapping("/signin")
@@ -116,6 +109,14 @@ public class AuthController {
             HttpServletResponse httpResponse
     ) {
         String email = request.getEmail().trim().toLowerCase();
+        String ip = clientIp(httpRequest);
+        if (!requestThrottleService.allowSignin(ip, email)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(authBody(
+                    "Too Many Requests",
+                    "Too many sign-in attempts. Please wait a minute and try again.",
+                    "THROTTLED_SIGNIN"
+            ));
+        }
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, request.getPassword())
@@ -134,10 +135,7 @@ public class AuthController {
             return unauthorizedBody("Invalid email or password.", "BAD_CREDENTIALS");
         }
 
-        return ResponseEntity.ok(Map.of(
-                "message", "Signed in successfully.",
-                "timestamp", Instant.now().toString()
-        ));
+        return successBody(HttpStatus.OK, "Signed in successfully.", "SIGNED_IN");
     }
 
     @GetMapping("/me")
@@ -194,6 +192,14 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(authBody("Unauthorized", message, code));
     }
 
+    private ResponseEntity<Map<String, Object>> successBody(HttpStatus status, String message, String code) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("message", message);
+        body.put("code", code);
+        body.put("timestamp", Instant.now().toString());
+        return ResponseEntity.status(status).body(body);
+    }
+
     private Map<String, Object> authBody(String error, String message, String code) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("error", error);
@@ -203,5 +209,17 @@ public class AuthController {
             body.put("code", code);
         }
         return body;
+    }
+
+    private String clientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.isBlank()) {
+            return realIp.trim();
+        }
+        return Objects.toString(request.getRemoteAddr(), "unknown");
     }
 }
