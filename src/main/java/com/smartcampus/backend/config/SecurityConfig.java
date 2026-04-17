@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -17,6 +18,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -29,10 +31,19 @@ public class SecurityConfig {
             HttpSecurity http,
             GoogleOAuth2UserService googleOAuth2UserService,
             OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
-            OAuth2LoginFailureHandler oAuth2LoginFailureHandler
+            OAuth2LoginFailureHandler oAuth2LoginFailureHandler,
+            @Value("${app.security.csrf.ignore:/api/auth/signin,/api/auth/signup,/api/auth/register,/api/auth/forgot-password,/api/auth/reset-password,/api/auth/logout,/oauth2/**,/login/**}") String csrfIgnore
     ) throws Exception {
+        String[] csrfIgnoredPaths = Arrays.stream(csrfIgnore.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .toArray(String[]::new);
+
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .ignoringRequestMatchers(csrfIgnoredPaths)
+                )
                 .cors(cors -> {})
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/error").permitAll()
@@ -98,11 +109,7 @@ public class SecurityConfig {
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout")
                         .logoutSuccessHandler((request, response, authentication) -> {
-                            response.setStatus(HttpServletResponse.SC_OK);
-                            response.setContentType("application/json");
-                            response.getWriter().write(
-                                    "{\"message\":\"Logged out\",\"timestamp\":\"" + Instant.now() + "\"}"
-                            );
+                            writeApiSuccess(response, HttpServletResponse.SC_OK, "Logged out", "LOGGED_OUT");
                         })
                 );
 
@@ -143,6 +150,24 @@ public class SecurityConfig {
                 jsonEscape(message),
                 jsonEscape(code),
                 safePath,
+                Instant.now()
+        ));
+    }
+
+    private void writeApiSuccess(
+            HttpServletResponse response,
+            int status,
+            String message,
+            String code
+    ) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(String.format(
+                Locale.ROOT,
+                "{\"message\":\"%s\",\"code\":\"%s\",\"timestamp\":\"%s\"}",
+                jsonEscape(message),
+                jsonEscape(code),
                 Instant.now()
         ));
     }

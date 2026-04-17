@@ -15,13 +15,19 @@ public class PasswordResetMailService {
 
     private final JavaMailSender mailSender;
     private final String fromAddress;
+    private final String smtpHost;
+    private final int smtpPort;
 
     public PasswordResetMailService(
             JavaMailSender mailSender,
-            @Value("${app.mail.from:}") String fromAddress
+            @Value("${app.mail.from:}") String fromAddress,
+            @Value("${spring.mail.host:}") String smtpHost,
+            @Value("${spring.mail.port:0}") int smtpPort
     ) {
         this.mailSender = mailSender;
         this.fromAddress = fromAddress == null ? "" : fromAddress.trim();
+        this.smtpHost = smtpHost == null ? "" : smtpHost.trim();
+        this.smtpPort = smtpPort;
     }
 
     public void sendPasswordResetEmail(String recipientEmail, String resetLink) {
@@ -36,7 +42,13 @@ public class PasswordResetMailService {
         try {
             mailSender.send(message);
         } catch (MailException ex) {
-            log.warn("Password reset email delivery failed (email redacted): {}", ex.getMessage());
+            log.warn(
+                    "Password reset email delivery failed (email redacted). provider=smtp host={} port={} reason={} detail={}",
+                    smtpHost.isBlank() ? "unset" : smtpHost,
+                    smtpPort,
+                    ex.getClass().getSimpleName(),
+                    ex.getMessage()
+            );
             throw ex;
         }
     }
