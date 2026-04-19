@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    // Find overlapping bookings(IMPORTANT)
+    // Find overlapping bookings (IMPORTANT)
     List<Booking> findByResourceIdAndDateAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
             Long resourceId,
             LocalDate date,

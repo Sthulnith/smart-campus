@@ -13,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tickets")
+@CrossOrigin(origins = "*") // IMPORTANT for React
 public class TicketController {
 
     @Autowired

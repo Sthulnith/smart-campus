@@ -43,7 +43,7 @@ function BookingPage() {
     fetchBookings();
   };
 
-  // CANCELLING (DELETE)
+  // CANCEL (DELETE)
 const cancelBooking = async (id, status) => {
   if (status === "CANCELLED") {
     alert("Already cancelled!");
@@ -68,7 +68,7 @@ const fetchResources = async () => {
   setResources(res.data);
 };
 
-  //  EDITING BOOKING
+  //  EDIT
   const editBooking = async (b) => {
   const updated = {
     ...b,
