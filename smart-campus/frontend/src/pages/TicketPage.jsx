@@ -80,7 +80,6 @@ function TicketPage() {
     setSelectedFile(e.target.files[0]);
   };
 
-
   const uploadImage = async (id) => {
     const formData = new FormData();
     formData.append("files", selectedFile);
