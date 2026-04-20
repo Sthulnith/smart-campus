@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-d
 
 import AdminRoute from "./components/AdminRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import LoginPage from "./pages/LoginPage";
@@ -19,6 +19,8 @@ import ResourcePage from "./pages/ResourcePage";
 import TicketPage from "./pages/TicketPage";
 
 function AppLayout() {
+  const { isAdmin } = useAuth();
+
   return (
     <div className="flex">
       <Sidebar />
@@ -30,8 +32,14 @@ function AppLayout() {
           <Routes>
             <Route path="/" element={<ResourcePage />} />
             <Route path="/resources" element={<ResourcePage />} />
-            <Route path="/bookings" element={<UserBookingPage />} />
+            <Route path="/facilities" element={<ResourcePage />} />
+            <Route 
+              path="/bookings" 
+              element={isAdmin ? <Navigate to="/admin-bookings" replace /> : <UserBookingPage />} 
+            />
             <Route path="/tickets" element={<TicketPage />} />
+            <Route path="/notifications" element={<div className="p-8 text-center font-bold text-slate-400">Notifications coming soon...</div>} />
+            <Route path="/profile" element={<div className="p-8 text-center font-bold text-slate-400">Profile page coming soon...</div>} />
             
             <Route
               path="/admin-bookings"

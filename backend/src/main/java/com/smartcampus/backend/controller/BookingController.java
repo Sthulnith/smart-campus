@@ -78,10 +78,14 @@ public class BookingController {
 
         b.setResourceId(updated.getResourceId());
         b.setDate(updated.getDate());
+        b.setEndDate(updated.getEndDate());
         b.setStartTime(updated.getStartTime());
         b.setEndTime(updated.getEndTime());
         b.setPurpose(updated.getPurpose());
         b.setAttendees(updated.getAttendees());
+        b.setCampus(updated.getCampus());
+        b.setCategory(updated.getCategory());
+        b.setFloor(updated.getFloor());
 
         return bookingRepository.save(b);
     }
@@ -139,5 +143,14 @@ public class BookingController {
 
         booking.setStatus("REJECTED");
         return bookingRepository.save(booking);
+    }
+    @DeleteMapping("/{id}")
+    public org.springframework.http.ResponseEntity<?> deleteBooking(@PathVariable Long id) {
+        return bookingRepository.findById(id)
+            .map(booking -> {
+                bookingRepository.delete(booking);
+                return org.springframework.http.ResponseEntity.ok().build();
+            })
+            .orElse(org.springframework.http.ResponseEntity.notFound().build());
     }
 }

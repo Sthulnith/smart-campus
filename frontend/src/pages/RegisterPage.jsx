@@ -3,8 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 import { AuthAlert, AuthCard, AuthShell } from "../components/AuthShell";
 import { getApiErrorMessage } from "../utils/authApi";
+import { User, Mail, Lock, Eye, EyeOff, GraduationCap, ArrowRight } from "lucide-react";
 
-const PWD_HINT = "At least 8 characters with one letter and one number.";
+const PWD_HINT = "Use 8+ characters with letters & numbers.";
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function RegisterPage() {
@@ -19,12 +20,12 @@ function RegisterPage() {
   const [error, setError] = useState(null);
 
   const clientValidate = () => {
-    if (!name.trim()) return "Enter your name.";
-    if (!email.trim()) return "Enter your email.";
-    if (!EMAIL_REGEX.test(email.trim())) return "Enter a valid email address.";
+    if (!name.trim()) return "Please enter your full name.";
+    if (!email.trim()) return "Please enter your email.";
+    if (!EMAIL_REGEX.test(email.trim())) return "Invalid email format.";
     if (password.length < 8) return "Password must be at least 8 characters.";
     if (!/(?=.*[A-Za-z])(?=.*\d)/.test(password)) {
-      return "Password must include at least one letter and one number.";
+      return "Include at least one letter and one number.";
     }
     if (password !== confirmPassword) return "Passwords do not match.";
     return null;
@@ -49,9 +50,9 @@ function RegisterPage() {
       setSuccess(true);
       setTimeout(() => {
         navigate("/login", { replace: true, state: { signupSuccess: true } });
-      }, 1300);
+      }, 1500);
     } catch (err) {
-      setError(getApiErrorMessage(err, "Could not create your account."));
+      setError(getApiErrorMessage(err, "Registration failed. Try again."));
     } finally {
       setSubmitting(false);
     }
@@ -60,109 +61,103 @@ function RegisterPage() {
   return (
     <AuthShell>
       <AuthCard>
-        <div className="px-8 pt-8 pb-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 mb-1">Smart Campus</p>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Create your account</h1>
-          <p className="text-slate-600 mt-2 text-sm leading-relaxed">
-            Register with your email and a strong password.
-          </p>
+        <div className="p-10 pt-12 pb-4 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-[20px] shadow-xl shadow-indigo-200 mb-6 animate-in zoom-in-50 duration-500">
+            <GraduationCap className="text-white w-10 h-10" />
+          </div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Join EduNexus</h1>
+          <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em] mt-2">Create your campus account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-8 pb-8 pt-4 space-y-4" noValidate aria-busy={submitting}>
-          {success && <AuthAlert variant="success">Account created successfully. Redirecting to sign in…</AuthAlert>}
+        <form onSubmit={handleSubmit} className="px-10 pb-12 space-y-6" noValidate>
+          {success && <AuthAlert variant="success">Account created! Redirecting to sign in...</AuthAlert>}
           {error && <AuthAlert variant="error">{error}</AuthAlert>}
 
-          <div>
-            <label htmlFor="register-name" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Name
-            </label>
-            <input
-              id="register-name"
-              autoComplete="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none disabled:bg-slate-50"
-              placeholder="Alex Student"
-              required
-              disabled={submitting}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="register-email" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Email
-            </label>
-            <input
-              id="register-email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none disabled:bg-slate-50"
-              placeholder="you@university.edu"
-              required
-              disabled={submitting}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="register-password" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                id="register-password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 pr-16 text-slate-900 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none disabled:bg-slate-50"
-                placeholder="Create a password"
-                required
-                disabled={submitting}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-500 hover:text-slate-800 px-2 py-1 rounded-lg"
-                tabIndex={-1}
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+              <div className="relative">
+                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                 <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-indigo-100 outline-none transition text-sm font-bold"
+                  placeholder="e.g. Alex Johnson"
+                  required
+                  disabled={submitting}
+                />
+              </div>
             </div>
-            <p className="text-xs text-slate-500 mt-1.5">{PWD_HINT}</p>
-          </div>
 
-          <div>
-            <label htmlFor="register-confirm-password" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Confirm password
-            </label>
-            <input
-              id="register-confirm-password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none disabled:bg-slate-50"
-              placeholder="Repeat password"
-              required
-              disabled={submitting}
-            />
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+              <div className="relative">
+                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                 <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-indigo-100 outline-none transition text-sm font-bold"
+                  placeholder="name@university.edu"
+                  required
+                  disabled={submitting}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Security Password</label>
+              <div className="relative">
+                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                 <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-12 pr-12 py-4 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-indigo-100 outline-none transition text-sm font-bold"
+                  placeholder="At least 8 characters"
+                  required
+                  disabled={submitting}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight ml-1">{PWD_HINT}</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm Password</label>
+              <div className="relative">
+                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                 <input
+                  type={showPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-indigo-100 outline-none transition text-sm font-bold"
+                  placeholder="Repeat your password"
+                  required
+                  disabled={submitting}
+                />
+              </div>
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/25 disabled:opacity-55 disabled:cursor-not-allowed transition"
+            className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
           >
-            {submitting ? "Creating account…" : "Register"}
+            {submitting ? "Creating..." : "Create Account"}
+            <ArrowRight size={16} />
           </button>
 
-          <p className="text-center text-sm text-slate-600 pt-1">
-            Already have an account?{" "}
-            <Link to="/login" className="font-semibold text-blue-600 hover:text-blue-700">
-              Sign in
-            </Link>
+          <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+            Already a member? <Link to="/login" className="text-indigo-500 hover:text-indigo-600">Sign In</Link>
           </p>
         </form>
       </AuthCard>
@@ -171,4 +166,3 @@ function RegisterPage() {
 }
 
 export default RegisterPage;
-

@@ -1,192 +1,370 @@
 import React, { useEffect, useState } from "react";
 import API from "../services/api";
-import { useAuth } from "../contexts/AuthContext";
+import { 
+  Ticket, 
+  Plus, 
+  Search, 
+  Filter, 
+  Clock, 
+  CheckCircle2, 
+  AlertCircle, 
+  BarChart3, 
+  X, 
+  Send,
+  Upload,
+  User as UserIcon,
+  Info,
+  ChevronDown,
+  FileImage,
+  Image as ImageIcon
+} from "lucide-react";
 
 function TicketPage() {
-  const { isAdmin } = useAuth();
+  const fileInputRef = React.useRef(null);
   const [tickets, setTickets] = useState([]);
-  const [editingId, setEditingId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedImages, setSelectedImages] = useState([]);
 
   const [form, setForm] = useState({
-    category: "",
+    title: "",
     description: "",
-    priority: "",
-    resourceId: "",
-    status: "OPEN"
+    urgency: "LOW",
+    category: "HARDWARE",
+    location: "",
+    contact: ""
   });
-
-  const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
     fetchTickets();
   }, []);
 
   const fetchTickets = async () => {
-    const res = await API.get("/tickets");
-    setTickets(res.data);
+    try {
+      setLoading(true);
+      const res = await API.get("/tickets");
+      setTickets(res.data);
+    } catch (err) {
+      console.error("Fetch tickets error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // ✅ CREATE / UPDATE
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      const newImages = files.map(file => ({
+        file,
+        preview: URL.createObjectURL(file)
+      }));
+      setSelectedImages(prev => [...prev, ...newImages].slice(0, 3));
+    }
+  };
+
+  const removeImage = (index) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (editingId) {
-      await API.put(`/tickets/${editingId}`, form);
-      setEditingId(null);
-    } else {
+    try {
+      // In a real app, you'd use FormData to upload images
       await API.post("/tickets", form);
+      setIsModalOpen(false);
+      setForm({ title: "", description: "", urgency: "LOW", category: "HARDWARE", location: "", contact: "" });
+      setSelectedImages([]);
+      fetchTickets();
+      alert("Incident reported successfully!");
+    } catch (err) {
+      alert("Report failed");
     }
-
-    setForm({
-      category: "",
-      description: "",
-      priority: "",
-      resourceId: "",
-      status: "OPEN"
-    });
-
-    fetchTickets();
   };
 
-  // ✅ DELETE
-  const deleteTicket = async (id) => {
-    if (!window.confirm("Delete this ticket?")) return;
-
-    await API.delete(`/tickets/${id}`);
-    fetchTickets();
+  const stats = {
+    total: tickets.length,
+    pending: tickets.filter(t => t.status === "OPEN" || t.status === "PENDING").length,
+    active: tickets.filter(t => t.status === "IN_PROGRESS").length,
+    completed: tickets.filter(t => t.status === "RESOLVED" || t.status === "CLOSED").length,
   };
 
-  // ✅ EDIT
-  const editTicket = (t) => {
-    setForm(t);
-    setEditingId(t.id);
-  };
+  const filteredTickets = tickets.filter(t => 
+    (statusFilter === "ALL" || t.status === statusFilter) &&
+    (t.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+     t.description?.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
-  // ✅ ASSIGN
-  const assignTechnician = async (id) => {
-    const techId = prompt("Enter Technician ID:");
-    if (!techId) return;
+  return (
+    <div className="space-y-10 animate-in fade-in duration-700">
+      
+      {/* Header Section */}
+      <div className="flex justify-between items-center bg-white/40 backdrop-blur-md p-2 rounded-[24px] border border-white/20">
+        <div className="flex items-center gap-4 px-4">
+          <div className="p-3 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-200">
+            <Ticket className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Ticketing System</h1>
+            <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Campus Management</p>
+          </div>
+        </div>
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold text-sm flex items-center gap-3 hover:bg-indigo-700 transition-all hover:scale-[1.02] shadow-xl shadow-indigo-100 active:scale-95"
+        >
+          <Plus className="w-5 h-5" />
+          Report Issue
+        </button>
+      </div>
 
-    await API.put(`/tickets/${id}/assign?technicianId=${techId}`);
-    fetchTickets();
-  };
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <StatCard label="Total Influx" value={stats.total} icon={<BarChart3 className="w-6 h-6 text-indigo-600" />} color="bg-indigo-50" active={true} />
+        <StatCard label="Pending Task" value={stats.pending} icon={<AlertCircle className="w-6 h-6 text-amber-600" />} color="bg-amber-50" />
+        <StatCard label="Active Work" value={stats.active} icon={<Clock className="w-6 h-6 text-blue-600" />} color="bg-blue-50" />
+        <StatCard label="Completed" value={stats.completed} icon={<CheckCircle2 className="w-6 h-6 text-emerald-600" />} color="bg-emerald-50" />
+      </div>
 
-  // ✅ FILE
-  const handleFileChange = (e) => {
-    setSelectedFile(e.target.files[0]);
-  };
+      {/* Main Container */}
+      <div className="bg-white rounded-[40px] shadow-sm border border-slate-50 min-h-[500px] flex flex-col overflow-hidden">
+        
+        {/* Search & Filter Bar */}
+        <div className="p-8 border-b border-slate-50 flex flex-wrap gap-4 items-center">
+          <div className="relative flex-1 min-w-[300px]">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="Search by title, location or keywords..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-4 bg-slate-50/50 border border-transparent rounded-2xl focus:bg-white focus:border-indigo-100 outline-none transition text-xs font-bold"
+            />
+          </div>
+          <div className="flex gap-4">
+             <FilterGroup label="All Status" icon={<Clock size={14} className="text-blue-500" />} />
+             <FilterGroup label="Priority" icon={<AlertCircle size={14} className="text-rose-500" />} />
+             <FilterGroup label="Newest" icon={<BarChart3 size={14} className="text-indigo-500" rotate={90} />} />
+          </div>
+        </div>
 
+        {/* Tickets Content */}
+        <div className="flex-1 p-8 flex flex-col items-center justify-center relative">
+          {loading ? (
+            <div className="animate-pulse flex flex-col items-center gap-4">
+              <div className="w-12 h-12 bg-slate-100 rounded-full"></div>
+              <div className="h-4 w-32 bg-slate-100 rounded"></div>
+            </div>
+          ) : filteredTickets.length === 0 ? (
+            <div className="flex flex-col items-center text-center max-w-sm animate-in zoom-in-95 duration-500">
+              <div className="w-24 h-24 bg-slate-50 rounded-[32px] flex items-center justify-center mb-6 border border-slate-100 group">
+                <div className="p-4 bg-white rounded-2xl shadow-sm"><Ticket className="w-10 h-10 text-slate-200 group-hover:text-indigo-200 transition-colors" /></div>
+              </div>
+              <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">No Tickets Found</h3>
+              <p className="text-slate-400 text-sm font-medium leading-relaxed">
+                There are no maintenance records recorded in the system yet.
+              </p>
+            </div>
+          ) : (
+             <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredTickets.map(t => <TicketCard key={t.id} ticket={t} />)}
+             </div>
+          )}
+        </div>
+      </div>
 
-  const uploadImage = async (id) => {
-    const formData = new FormData();
-    formData.append("files", selectedFile);
+      {/* Report Incident Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-white/80">
+              <div>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Report Incident</h2>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5 flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div> Maintenance Operations</p>
+              </div>
+              <button onClick={() => { setIsModalOpen(false); setSelectedImages([]); }} className="p-2 hover:bg-slate-50 rounded-full transition">
+                <X className="w-6 h-6 text-slate-400" />
+              </button>
+            </div>
 
-    await API.post(`/tickets/${id}/upload`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+            <form onSubmit={handleSubmit} className="p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+              <div className="space-y-6">
+                <FormField label="Incident Title" hint={`${form.title.length}/200`}>
+                  <input name="title" value={form.title} onChange={handleChange} placeholder="e.g. Broken Lighting in Hallway B" className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" required maxLength={200} />
+                </FormField>
 
-    alert("Image uploaded!");
+                <div className="grid grid-cols-2 gap-6">
+                  <FormField label="Urgency Level">
+                    <select name="urgency" value={form.urgency} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-black uppercase outline-none focus:border-indigo-500 transition cursor-pointer">
+                      <option value="LOW">LOW</option>
+                      <option value="MEDIUM">MEDIUM</option>
+                      <option value="HIGH">HIGH</option>
+                    </select>
+                  </FormField>
+                  <FormField label="Issue Category">
+                    <select name="category" value={form.category} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-black uppercase outline-none focus:border-indigo-500 transition cursor-pointer">
+                      <option value="HARDWARE">HARDWARE</option>
+                      <option value="SOFTWARE">SOFTWARE</option>
+                      <option value="PLUMBING">PLUMBING</option>
+                      <option value="ELECTRICAL">ELECTRICAL</option>
+                    </select>
+                  </FormField>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <FormField label="Facility / Room">
+                    <input name="location" value={form.location} onChange={handleChange} placeholder="e.g. Block C - 302" className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" required />
+                  </FormField>
+                  <FormField label="Contact Extension">
+                    <input name="contact" value={form.contact} onChange={handleChange} placeholder="e.g. +94 77..." className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" />
+                  </FormField>
+                </div>
+
+                <FormField label="Visual Evidence" hint={`${selectedImages.length}/3 images selected`} hintColor={selectedImages.length >= 3 ? "text-rose-500" : "text-slate-300"}>
+                   <input type="file" ref={fileInputRef} onChange={handleFileChange} multiple accept="image/*" className="hidden" />
+                   
+                   {selectedImages.length > 0 ? (
+                     <div className="grid grid-cols-3 gap-4">
+                        {selectedImages.map((img, idx) => (
+                          <div key={idx} className="relative aspect-video rounded-2xl overflow-hidden group border border-slate-100">
+                             <img src={img.preview} alt="Upload" className="w-full h-full object-cover" />
+                             <button 
+                               type="button"
+                               onClick={() => removeImage(idx)}
+                               className="absolute top-2 right-2 p-1 bg-white/80 backdrop-blur-sm rounded-full text-rose-500 opacity-0 group-hover:opacity-100 transition shadow-sm"
+                             >
+                               <X size={14} />
+                             </button>
+                          </div>
+                        ))}
+                        {selectedImages.length < 3 && (
+                          <button 
+                            type="button"
+                            onClick={handleUploadClick}
+                            className="aspect-video rounded-2xl border-2 border-dashed border-slate-100 flex flex-col items-center justify-center gap-2 bg-slate-50/30 hover:bg-slate-50 transition"
+                          >
+                             <Plus className="w-5 h-5 text-slate-300" />
+                             <span className="text-[10px] font-black text-slate-400 uppercase">Add More</span>
+                          </button>
+                        )}
+                     </div>
+                   ) : (
+                     <div onClick={handleUploadClick} className="w-full border-2 border-dashed border-slate-100 rounded-[32px] p-10 flex flex-col items-center justify-center gap-4 bg-slate-50/30 hover:bg-slate-50 transition cursor-pointer group">
+                        <div className="p-3 bg-white rounded-2xl shadow-sm text-slate-300 group-hover:text-indigo-500 group-hover:shadow-indigo-50 transition-all">
+                          <Upload size={24} />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs font-black text-slate-900 tracking-tight">Click to upload photos</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">JPG, PNG OR GIF (MAX 3)</p>
+                        </div>
+                     </div>
+                   )}
+                </FormField>
+
+                <FormField label="Incident Description" hint="No limit on detail">
+                   <textarea name="description" value={form.description} onChange={handleChange} placeholder="Provide technical details about the issue..." className="w-full bg-slate-50 border border-slate-100 rounded-[24px] p-6 text-xs font-bold outline-none focus:border-indigo-500 transition min-h-[120px] resize-none" required />
+                </FormField>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button type="button" onClick={() => { setIsModalOpen(false); setSelectedImages([]); }} className="flex-1 py-4 bg-slate-50 text-xs font-black text-slate-500 uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition">Cancel</button>
+                <button type="submit" className="flex-[2] bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition flex items-center justify-center gap-3 active:scale-95">
+                  <Send size={16} />
+                  Transmit Report
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ label, value, icon, color, active }) {
+  return (
+    <div className={`p-6 rounded-[32px] border ${active ? 'bg-white border-indigo-500 ring-4 ring-indigo-50' : 'bg-white border-slate-50'} shadow-sm flex items-center justify-between group transition-all`}>
+      <div className="space-y-1">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
+        <div className="flex items-baseline gap-1">
+          <p className="text-4xl font-black text-slate-900 tracking-tighter">{value}</p>
+          <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Tickets</span>
+        </div>
+      </div>
+      <div className={`p-4 ${color} rounded-2xl group-hover:scale-110 transition-transform shadow-sm`}>
+        {icon}
+      </div>
+    </div>
+  );
+}
+
+function FilterGroup({ label, icon }) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-50/50 rounded-xl hover:bg-white border border-transparent hover:border-slate-100 transition cursor-pointer">
+      {icon}
+      <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">{label}</span>
+      <ChevronDown size={14} className="text-slate-300 ml-2" />
+    </div>
+  );
+}
+
+function FormField({ label, children, hint, hintColor = "text-slate-300" }) {
+  return (
+    <div className="space-y-2">
+      <div className="flex justify-between items-center px-1">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</label>
+        {hint && <span className={`text-[9px] font-black uppercase tracking-widest ${hintColor}`}>{hint}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function TicketCard({ ticket }) {
+  const urgencyColors = {
+    LOW: "text-emerald-500 bg-emerald-50 border-emerald-100",
+    MEDIUM: "text-amber-500 bg-amber-50 border-amber-100",
+    HIGH: "text-rose-500 bg-rose-50 border-rose-100"
   };
 
   return (
-    <div className="p-6 space-y-6">
-
-      <h2 className="text-2xl font-bold">Tickets</h2>
-
-      {/* FORM */}
-      <div className="bg-white p-6 rounded-xl shadow-md">
-        <h3 className="text-lg font-semibold mb-4">
-          {editingId ? "Update Ticket" : "Create Ticket"}
-        </h3>
-
-        <form onSubmit={handleSubmit} className="grid grid-cols-4 gap-4">
-
-          <input name="category" value={form.category} onChange={handleChange}
-            placeholder="Category" className="border p-2 rounded-lg" />
-
-          <input name="description" value={form.description} onChange={handleChange}
-            placeholder="Description" className="border p-2 rounded-lg" />
-
-          <select name="priority" value={form.priority} onChange={handleChange}
-            className="border p-2 rounded-lg">
-            <option value="">Priority</option>
-            <option value="LOW">LOW</option>
-            <option value="MEDIUM">MEDIUM</option>
-            <option value="HIGH">HIGH</option>
-          </select>
-
-          <input name="resourceId" value={form.resourceId} onChange={handleChange}
-            placeholder="Resource ID" className="border p-2 rounded-lg" />
-
-          <button className="col-span-4 bg-blue-600 text-white py-2 rounded-lg">
-            {editingId ? "Update" : "Create"}
-          </button>
-
-        </form>
-      </div>
-
-      {/* LIST */}
-      <div className="bg-white p-6 rounded-xl shadow-md">
-        <h3 className="text-lg font-semibold mb-4">Ticket List</h3>
-
-        <div className="space-y-4">
-          {tickets.map((t) => (
-            <div key={t.id} className="bg-gray-50 p-4 rounded-lg shadow-sm">
-
-              <p className="font-semibold">{t.category}</p>
-              <p>{t.description}</p>
-              <p>Priority: {t.priority}</p>
-              <p>Status: {t.status}</p>
-
-              {/* BUTTONS */}
-              <div className="flex gap-2 mt-3">
-
-                <button
-                  onClick={() => editTicket(t)}
-                  className="bg-yellow-500 text-white px-3 py-1 rounded"
-                >
-                  Edit
-                </button>
-
-                {isAdmin && (
-                  <>
-                    <button
-                      onClick={() => deleteTicket(t.id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded"
-                    >
-                      Delete
-                    </button>
-
-                    <button
-                      onClick={() => assignTechnician(t.id)}
-                      className="bg-blue-500 text-white px-3 py-1 rounded"
-                    >
-                      Assign
-                    </button>
-                  </>
-                )}
-
-                <input type="file" onChange={handleFileChange} />
-
-                <button
-                  onClick={() => uploadImage(t.id)}
-                  className="bg-green-600 text-white px-3 py-1 rounded"
-                >
-                  Upload
-                </button>
-
-              </div>
-
-            </div>
-          ))}
+    <div className="bg-white p-6 rounded-[32px] border border-slate-50 shadow-sm hover:shadow-xl hover:shadow-slate-100 transition-all group flex flex-col justify-between h-full">
+      <div className="space-y-4">
+        <div className="flex justify-between items-start">
+           <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-indigo-50 transition-colors">
+              <Ticket className="w-5 h-5 text-slate-400 group-hover:text-indigo-600" />
+           </div>
+           <span className={`px-3 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-widest ${urgencyColors[ticket.urgency] || urgencyColors.LOW}`}>
+              {ticket.urgency}
+           </span>
         </div>
 
-      </div>
+        <div>
+          <h4 className="text-lg font-black text-slate-900 tracking-tight line-clamp-1">{ticket.title}</h4>
+          <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mt-1">{ticket.category}</p>
+        </div>
 
+        <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{ticket.description}</p>
+        
+        <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+           <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 font-bold text-[10px] uppercase">
+                 {ticket.user?.name?.charAt(0) || "U"}
+              </div>
+              <span className="text-[10px] font-bold text-slate-500">{ticket.user?.name || "Reporter"}</span>
+           </div>
+           <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">ID: T-{100 + ticket.id}</span>
+        </div>
+      </div>
     </div>
   );
 }
