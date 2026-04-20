@@ -10,7 +10,6 @@ function UserBookingPage() {
 
   const [form, setForm] = useState({
     resourceId: "",
-    userId: localStorage.getItem("userId"),
     date: "",
     startTime: "",
     endTime: "",
@@ -24,15 +23,13 @@ function UserBookingPage() {
   }, []);
 
   const fetchBookings = async () => {
-    const userId = localStorage.getItem("userId");
-    const res = await API.get(`/bookings/user/${userId}`);
-    setBookings(res.data);
     try {
       setLoading(true);
-      const userId = localStorage.getItem("userId");
-      const res = await API.get(`/bookings/user/${userId}`);
+      // ✅ FIXED: Removed userId from URL, backend gets user from Authentication
+      const res = await API.get("/bookings/user");
       setBookings(res.data);
     } catch (err) {
+      console.error("Fetch bookings error:", err);
       alert("Failed to load bookings");
     } finally {
       setLoading(false);
@@ -52,12 +49,12 @@ function UserBookingPage() {
     e.preventDefault();
 
     try {
+      // ✅ FIXED: Sending form without userId
       await API.post("/bookings", form);
       alert("Booking created!");
 
       setForm({
         resourceId: "",
-        userId: localStorage.getItem("userId"),
         date: "",
         startTime: "",
         endTime: "",
@@ -71,7 +68,6 @@ function UserBookingPage() {
     }
   };
 
-  // Cancel Booking
   const cancelBooking = async (id, status) => {
     if (status === "CANCELLED") {
       alert("Already cancelled!");
@@ -89,16 +85,10 @@ function UserBookingPage() {
     }
   };
 
-  // Filter logic
-  // ✅ FILTER + SORT
-  const filteredBookings =
-    statusFilter === "ALL"
-      ? bookings
-      : bookings.filter((b) => b.status === statusFilter);
   // ✅ FILTER (STATUS + SEARCH)
   const filteredBookings = bookings.filter((b) =>
     (statusFilter === "ALL" || b.status === statusFilter) &&
-    b.purpose.toLowerCase().includes(search.toLowerCase())
+    (b.purpose || "").toLowerCase().includes(search.toLowerCase())
   );
 
   // ✅ SORT
@@ -129,8 +119,6 @@ function UserBookingPage() {
             ))}
           </select>
 
-          <input type="date" name="date" value={form.date} onChange={handleChange} className="border p-2 rounded-lg" />
-          {/* ✅ DISABLE PAST DATES */}
           <input
             type="date"
             name="date"
@@ -155,42 +143,12 @@ function UserBookingPage() {
       {/* USER BOOKINGS */}
       <div className="bg-white p-6 rounded-xl shadow-md">
 
-        {/* HEADER + FILTER */}
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">My Bookings</h3>
-
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="border p-2 rounded-lg"
-          >
-            <option value="ALL">All</option>
-            <option value="PENDING">Pending</option>
-            <option value="APPROVED">Approved</option>
-            <option value="CANCELLED">Cancelled</option>
-          </select>
-        </div>
-
-        {/* ✅ EMPTY STATE */}
-        {filteredBookings.length === 0 ? (
-          <p className="text-center text-gray-500 py-6 italic">
-            No bookings found
         {loading ? (
           <p className="text-center text-blue-500 py-4">
             Loading bookings...
           </p>
         ) : (
-          filteredBookings.map((b) => {
-            const resource = resources.find(r => r.id === b.resourceId);
-
-            return (
-              <div
-                key={b.id}
-                className="p-4 bg-gray-50 rounded-lg mb-2 flex justify-between items-center"
           <>
-            {/* HEADER + FILTER */}
-            <div className="flex justify-between items-center mb-4">
-            <div className="flex justify-between items-center mb-2">
             {/* HEADER + SEARCH + FILTER */}
             <div className="flex justify-between items-center mb-2 gap-2">
 
@@ -209,45 +167,6 @@ function UserBookingPage() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="border p-2 rounded-lg"
               >
-
-                {/* INFO */}
-                <div>
-                  <p className="font-medium">
-                    Resource: {resource ? resource.name : b.resourceId}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {b.date} | {b.startTime} - {b.endTime}
-                  </p>
-                  <p className="text-sm">
-                    Status:{" "}
-                    <span className={
-                      b.status === "CANCELLED"
-                        ? "text-red-600"
-                        : b.status === "PENDING"
-                        ? "text-yellow-600"
-                        : "text-green-600"
-                    }>
-                      {b.status}
-                    </span>
-                  </p>
-                </div>
-
-                {/* ACTION */}
-                <button
-                  disabled={b.status === "CANCELLED"}
-                  onClick={() => cancelBooking(b.id, b.status)}
-                  className={`px-3 py-1 rounded text-white ${
-                    b.status === "CANCELLED"
-                      ? "bg-gray-400"
-                      : "bg-red-600 hover:bg-red-700"
-                  }`}
-                >
-                  Cancel
-                </button>
-
-              </div>
-            );
-          })
                 <option value="ALL">All</option>
                 <option value="PENDING">Pending</option>
                 <option value="APPROVED">Approved</option>
@@ -255,19 +174,15 @@ function UserBookingPage() {
               </select>
             </div>
 
-            {/* ✅ BOOKING COUNT */}
             <p className="text-sm text-gray-500 mb-4">
               Total: {filteredBookings.length} bookings
             </p>
 
-            {/* EMPTY STATE */}
-            {filteredBookings.length === 0 ? (
             {sortedBookings.length === 0 ? (
               <p className="text-center text-gray-500 py-6 italic">
                 No bookings found
               </p>
             ) : (
-              filteredBookings.map((b) => {
               sortedBookings.map((b) => {
                 const resource = resources.find(r => r.id === b.resourceId);
 
@@ -276,8 +191,6 @@ function UserBookingPage() {
                     key={b.id}
                     className="p-4 bg-gray-50 rounded-lg mb-2 flex justify-between items-center"
                   >
-
-                    {/* INFO */}
                     <div>
                       <p className="font-medium">
                         Resource: {resource ? resource.name : b.resourceId}
@@ -286,21 +199,10 @@ function UserBookingPage() {
                         {b.date} | {b.startTime} - {b.endTime}
                       </p>
                       <p className="text-sm">
-                        Status:{" "}
-                        <span className={
-                          b.status === "CANCELLED"
-                            ? "text-red-600"
-                            : b.status === "PENDING"
-                            ? "text-yellow-600"
-                            : "text-green-600"
-                        }>
-                          {b.status}
-                        </span>
                         Status: {b.status}
                       </p>
                     </div>
 
-                    {/* ACTION */}
                     <button
                       disabled={b.status === "CANCELLED"}
                       onClick={() => cancelBooking(b.id, b.status)}
@@ -312,7 +214,6 @@ function UserBookingPage() {
                     >
                       Cancel
                     </button>
-
                   </div>
                 );
               })

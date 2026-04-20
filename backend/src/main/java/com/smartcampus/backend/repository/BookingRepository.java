@@ -14,4 +14,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             LocalTime endTime,
             LocalTime startTime
     );
+
+    // Fetch bookings by user email (username)
+    List<Booking> findByUserEmail(String email);
 }

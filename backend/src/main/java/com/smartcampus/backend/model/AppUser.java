@@ -13,6 +13,8 @@ import jakarta.persistence.Table;
 
 import java.time.Instant;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "app_users")
 public class AppUser {
@@ -30,6 +32,7 @@ public class AppUser {
     @Column(nullable = false)
     private String name;
 
+    @JsonIgnore
     @Column(name = "password_hash")
     private String passwordHash;
 

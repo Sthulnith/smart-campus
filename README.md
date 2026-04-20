@@ -2,7 +2,7 @@
 
 Smart Campus includes:
 
-- `src/` backend (Spring Boot + Spring Security + OAuth2 Google login)
+- `backend/` backend (Spring Boot + Spring Security + OAuth2 Google login)
 - `frontend/` frontend (React)
 
 ## Prerequisites
@@ -69,9 +69,8 @@ docker compose up -d
 
 ### 2) Start backend
 
-From project root:
-
 ```bash
+cd backend
 ./mvnw spring-boot:run
 ```
 

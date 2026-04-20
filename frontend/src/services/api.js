@@ -5,6 +5,8 @@ const API = axios.create({
   withCredentials: true,
 });
 
+// Removed token interceptor as we use session-based auth with withCredentials: true
+
 API.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -19,6 +21,8 @@ API.interceptors.response.use(
       path.startsWith("/auth/callback");
 
     if (status === 401 && !skipRedirect) {
+      // Clear token on 401
+      localStorage.removeItem("token");
       window.location.href = "/login";
     }
 

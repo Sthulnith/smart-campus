@@ -10,7 +10,10 @@ public class Booking {
 
     private Long id;
     private Long resourceId;
-    private Long userId;
+    
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private AppUser user;
 
     private LocalDate date;
     private LocalTime startTime;
@@ -34,11 +37,11 @@ public class Booking {
     public void setResourceId(Long resourceId) {
         this.resourceId = resourceId;
     }
-    public Long getUserId() {
-        return userId;
+    public AppUser getUser() {
+        return user;
     }
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUser(AppUser user) {
+        this.user = user;
     }
     public LocalDate getDate() {
         return date;
@@ -76,5 +79,4 @@ public class Booking {
     public void setAttendees(int attendees) {
         this.attendees = attendees;
     }
-    
 }
