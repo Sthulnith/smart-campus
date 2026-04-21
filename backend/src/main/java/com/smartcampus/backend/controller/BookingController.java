@@ -95,8 +95,8 @@ public class BookingController {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-        if (!booking.getStatus().equals("PENDING")) {
-            throw new RuntimeException("Only pending bookings can be approved");
+        if (booking.getStatus().equals("CANCELLED")) {
+            throw new RuntimeException("Cancelled bookings cannot be approved");
         }
 
         booking.setStatus("APPROVED");
@@ -137,8 +137,8 @@ public class BookingController {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-        if (!booking.getStatus().equals("PENDING")) {
-            throw new RuntimeException("Only pending bookings can be rejected");
+        if (booking.getStatus().equals("CANCELLED")) {
+            throw new RuntimeException("Cancelled bookings cannot be rejected");
         }
 
         booking.setStatus("REJECTED");

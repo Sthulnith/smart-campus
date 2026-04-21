@@ -29,12 +29,12 @@ function Sidebar() {
         <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
           <GraduationCap className="w-6 h-6 text-white" />
         </div>
-        <h1 className="text-xl font-black text-slate-900 tracking-tight">EduNexus</h1>
+        <h1 className="text-xl font-black text-slate-900 tracking-tight">UniSync</h1>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 flex flex-col gap-2">
-        <SidebarLink to="/resources" icon={<LayoutDashboard size={20} />} label="Dashboard" />
+        <SidebarLink to="/" icon={<LayoutDashboard size={20} />} label="Dashboard" />
         <SidebarLink to="/facilities" icon={<Building2 size={20} />} label="Facilities" />
         
         {!isAdmin && (

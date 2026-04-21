@@ -16,7 +16,10 @@ import {
   Users,
   Info,
   ChevronRight,
-  Bell
+  Bell,
+  Microscope,
+  Cpu,
+  BookOpen
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -33,7 +36,7 @@ function AdminBookingPage() {
     resourceId: "",
     campus: "Malabe Campus",
     category: "Lecture Hall",
-    floor: "Floor 01",
+    floor: "",
     date: "",
     endDate: "",
     startTime: "",
@@ -41,6 +44,9 @@ function AdminBookingPage() {
     purpose: "",
     attendees: 1
   });
+
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -105,18 +111,40 @@ function AdminBookingPage() {
       setIsModalOpen(false);
       setForm({
         resourceId: "", campus: "Malabe Campus", category: "Lecture Hall",
-        floor: "Floor 01", date: "", endDate: "", startTime: "", endTime: "",
+        floor: "", date: "", endDate: "", startTime: "", endTime: "",
         purpose: "", attendees: 1
       });
       fetchData();
       alert("Request submitted successfully!");
     } catch (err) {
-      alert(err.response?.data || "Booking failed");
+      alert(err.response?.data?.message || err.response?.data || "Booking failed");
+    }
+  };
+
+  const handleReviewAction = async (id, action) => {
+    try {
+      if (action === 'approve') {
+        await API.put(`/bookings/${id}/approve`);
+      } else {
+        await API.put(`/bookings/${id}/reject`);
+      }
+      setIsReviewModalOpen(false);
+      setSelectedBooking(null);
+      fetchData();
+    } catch (err) {
+      alert(`${action} failed: ` + (err.response?.data?.message || err.response?.data || ""));
     }
   };
 
   const handleFormChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === "date") {
+      setForm({ ...form, [name]: value, endDate: value });
+    } else if (name === "category") {
+      setForm({ ...form, [name]: value, resourceId: "" });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const filteredBookings = bookings.filter(b => {
@@ -124,7 +152,8 @@ function AdminBookingPage() {
     const matchesSearch = 
       (b.user?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (b.purpose || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      getResourceName(b.resourceId).toLowerCase().includes(searchTerm.toLowerCase());
+      getResourceName(b.resourceId).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (b.category || "").toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -133,6 +162,14 @@ function AdminBookingPage() {
     approved: bookings.filter(b => b.status === "APPROVED").length,
     pending: bookings.filter(b => b.status === "PENDING").length,
     rejected: bookings.filter(b => b.status === "REJECTED").length,
+  };
+
+  const typeConfigs = {
+    "Lecture Hall": { icon: <BookOpen size={14} />, color: "bg-blue-600", shadow: "shadow-blue-100" },
+    "Laboratory": { icon: <Microscope size={14} />, color: "bg-emerald-600", shadow: "shadow-emerald-100" },
+    "Equipment": { icon: <Cpu size={14} />, color: "bg-amber-600", shadow: "shadow-amber-100" },
+    "Meeting Room": { icon: <Users size={14} />, color: "bg-rose-600", shadow: "shadow-rose-100" },
+    "default": { icon: <Users size={14} />, color: "bg-indigo-600", shadow: "shadow-indigo-100" }
   };
 
   if (loading) {
@@ -258,8 +295,15 @@ function AdminBookingPage() {
                     </div>
                   </td>
                   <td className="px-4 py-4 bg-white border-y border-slate-50 group-hover:border-indigo-100 transition-colors">
-                    <p className="font-black text-slate-900 text-[11px] leading-tight">{getResourceName(b.resourceId)}</p>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase">{b.campus || 'Main Campus'} - {b.floor || 'G-Floor'}</p>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-xl ${(typeConfigs[b.category] || typeConfigs.default).color} flex items-center justify-center text-white shadow-sm`}>
+                        {(typeConfigs[b.category] || typeConfigs.default).icon}
+                      </div>
+                      <div>
+                        <p className="font-black text-slate-900 text-[11px] leading-tight">{getResourceName(b.resourceId)}</p>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase">{b.campus || 'Main Campus'} - {b.floor || 'G-Floor'}</p>
+                      </div>
+                    </div>
                   </td>
                   <td className="px-4 py-4 bg-white border-y border-slate-50 group-hover:border-indigo-100 transition-colors">
                     <span className="px-2 py-0.5 bg-slate-50 text-indigo-500 text-[8px] font-black uppercase tracking-widest rounded-md border border-indigo-50">
@@ -291,9 +335,16 @@ function AdminBookingPage() {
                           </button>
                         </>
                       ) : (
-                        <button className="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-indigo-600 hover:text-white transition shadow-sm" title="View Details">
-                          <Eye className="w-4 h-4" />
-                        </button>
+                      <button 
+                        onClick={() => {
+                          setSelectedBooking(b);
+                          setIsReviewModalOpen(true);
+                        }}
+                        className="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-indigo-600 hover:text-white transition shadow-sm" 
+                        title="View Details"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                       )}
                       <button 
                         onClick={() => deleteBooking(b.id)}
@@ -361,12 +412,12 @@ function AdminBookingPage() {
                       <option>Matara Campus</option>
                    </select>
                 </FormField>
-                <FormField label="Category">
+                 <FormField label="Category">
                    <select name="category" value={form.category} onChange={handleFormChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition cursor-pointer">
-                      <option>Lecture Hall</option>
-                      <option>Laboratory</option>
-                      <option>Equipment</option>
-                      <option>Meeting Room</option>
+                      <option value="Lecture Hall">Lecture Hall</option>
+                      <option value="Laboratory">Laboratory</option>
+                      <option value="Equipment">Equipment</option>
+                      <option value="Meeting Room">Meeting Room</option>
                    </select>
                 </FormField>
               </div>
@@ -378,19 +429,24 @@ function AdminBookingPage() {
                       <option>New Building</option>
                    </select>
                 </FormField>
-                <FormField label="Floor">
-                   <select name="floor" value={form.floor} onChange={handleFormChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition cursor-pointer">
-                      <option>Floor 01</option>
-                      <option>Floor 02</option>
-                      <option>Floor 03</option>
-                   </select>
+                 <FormField label="Floor">
+                   <input 
+                    name="floor" 
+                    value={form.floor} 
+                    onChange={handleFormChange} 
+                    placeholder="Enter Floor (e.g. Floor 01)"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" 
+                  />
                 </FormField>
               </div>
 
-              <FormField label="Specific Room / Lab">
+               <FormField label="Specific Resources">
                  <select name="resourceId" value={form.resourceId} onChange={handleFormChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition cursor-pointer" required>
-                    <option value="">Choose Room...</option>
-                    {resources.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                    <option value="">Choose Resource...</option>
+                    {resources
+                      .filter(r => r.type === form.category)
+                      .map(r => <option key={r.id} value={r.id}>{r.name}</option>)
+                    }
                  </select>
               </FormField>
 
@@ -400,10 +456,10 @@ function AdminBookingPage() {
 
               <div className="bg-slate-50/50 p-6 rounded-[32px] border border-slate-100 grid grid-cols-2 gap-6">
                  <FormField label="Start Date">
-                    <input type="date" name="date" value={form.date} onChange={handleFormChange} className="w-full bg-white border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-indigo-500 transition" required />
+                    <input type="date" name="date" value={form.date} min={new Date().toISOString().split("T")[0]} onChange={handleFormChange} className="w-full bg-white border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-indigo-500 transition" required />
                  </FormField>
                  <FormField label="End Date">
-                    <input type="date" name="endDate" value={form.endDate} onChange={handleFormChange} className="w-full bg-white border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-indigo-500 transition" required />
+                    <input type="date" name="endDate" value={form.endDate} min={form.date || new Date().toISOString().split("T")[0]} onChange={handleFormChange} className="w-full bg-white border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-indigo-500 transition" required />
                  </FormField>
                  <FormField label="Start Time">
                     <input type="time" name="startTime" value={form.startTime} onChange={handleFormChange} className="w-full bg-white border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-indigo-500 transition" required />
@@ -422,6 +478,120 @@ function AdminBookingPage() {
                 <button type="submit" className="flex-[2] bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition active:scale-95">Submit Request</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Review Request Modal */}
+      {isReviewModalOpen && selectedBooking && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white/20">
+            <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-white/80">
+              <div>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Review Request</h2>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Booking ID: #{1000 + selectedBooking.id}</p>
+              </div>
+              <button onClick={() => setIsReviewModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-full transition">
+                <X className="w-6 h-6 text-slate-400" />
+              </button>
+            </div>
+
+            <div className="p-8 space-y-6">
+              <div className="bg-slate-50 p-6 rounded-[32px] space-y-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-sm uppercase">
+                      {selectedBooking.user?.name?.charAt(0) || "U"}
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-slate-900">{selectedBooking.user?.name || "Unknown User"}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">Requested by User</p>
+                    </div>
+                  </div>
+                  <StatusBadge status={selectedBooking.status} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200/50">
+                  <div>
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Resource</p>
+                    <p className="text-xs font-black text-slate-800">{getResourceName(selectedBooking.resourceId)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Category</p>
+                    <p className="text-xs font-black text-indigo-600">{selectedBooking.category || "General"}</p>
+                  </div>
+                  <div>
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Date & Time</p>
+                    <p className="text-xs font-black text-slate-800">{selectedBooking.date} | {selectedBooking.startTime}</p>
+                  </div>
+                  <div>
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Floor</p>
+                    <p className="text-xs font-black text-slate-800">{selectedBooking.floor || "Not Specified"}</p>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-200/50">
+                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Purpose</p>
+                   <p className="text-xs font-medium text-slate-600 italic">"{selectedBooking.purpose}"</p>
+                </div>
+              </div>
+
+               <div className="flex gap-4">
+                {selectedBooking.status === "PENDING" ? (
+                  <>
+                    <button 
+                      onClick={() => handleReviewAction(selectedBooking.id, 'reject')}
+                      className="flex-1 py-4 bg-rose-50 text-rose-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-600 hover:text-white transition shadow-sm"
+                    >
+                      Reject Request
+                    </button>
+                    <button 
+                      onClick={() => handleReviewAction(selectedBooking.id, 'approve')}
+                      className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition"
+                    >
+                      Approve Request
+                    </button>
+                  </>
+                ) : selectedBooking.status === "APPROVED" ? (
+                  <>
+                    <button 
+                      onClick={() => handleReviewAction(selectedBooking.id, 'reject')}
+                      className="flex-1 py-4 bg-rose-50 text-rose-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-600 hover:text-white transition shadow-sm"
+                    >
+                      Reject Booking
+                    </button>
+                    <button 
+                      onClick={() => setIsReviewModalOpen(false)}
+                      className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition shadow-lg"
+                    >
+                      Close
+                    </button>
+                  </>
+                ) : selectedBooking.status === "REJECTED" ? (
+                  <>
+                    <button 
+                      onClick={() => handleReviewAction(selectedBooking.id, 'approve')}
+                      className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition"
+                    >
+                      Approve Booking
+                    </button>
+                    <button 
+                      onClick={() => setIsReviewModalOpen(false)}
+                      className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition shadow-lg"
+                    >
+                      Close
+                    </button>
+                  </>
+                ) : (
+                  <button 
+                    onClick={() => setIsReviewModalOpen(false)}
+                    className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition shadow-lg"
+                  >
+                    Close Preview
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

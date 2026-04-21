@@ -220,14 +220,15 @@ function ResourcePage() {
 }
 
 function ResourceCard({ resource, isAdmin, onEdit, onDelete }) {
-  const getIcon = (type) => {
-    switch(type) {
-      case "Lecture Hall": return <BookOpen size={18} />;
-      case "Laboratory": return <Microscope size={18} />;
-      case "Equipment": return <Cpu size={18} />;
-      default: return <Users size={18} />;
-    }
+  const typeConfigs = {
+    "Lecture Hall": { icon: <BookOpen size={18} />, color: "bg-blue-600", shadow: "shadow-blue-100" },
+    "Laboratory": { icon: <Microscope size={18} />, color: "bg-emerald-600", shadow: "shadow-emerald-100" },
+    "Equipment": { icon: <Cpu size={18} />, color: "bg-amber-600", shadow: "shadow-amber-100" },
+    "Meeting Room": { icon: <Users size={18} />, color: "bg-rose-600", shadow: "shadow-rose-100" },
+    "default": { icon: <Users size={18} />, color: "bg-indigo-600", shadow: "shadow-indigo-100" }
   };
+
+  const typeConfig = typeConfigs[resource.type] || typeConfigs.default;
 
   const statusConfig = {
     ACTIVE: { label: "ACTIVE", color: "text-emerald-500", bg: "bg-emerald-50", border: "border-emerald-100", dot: "bg-emerald-500", topBorder: "border-emerald-500" },
@@ -241,8 +242,8 @@ function ResourceCard({ resource, isAdmin, onEdit, onDelete }) {
     <div className={`bg-white rounded-[28px] border-t-4 ${config.topBorder} border-x border-b border-slate-50 shadow-sm hover:shadow-xl hover:shadow-slate-100 transition-all group overflow-hidden flex flex-col justify-between`}>
       <div className="p-6 space-y-4">
         <div className="flex justify-between items-start">
-          <div className={`p-3 ${resource.status === 'MAINTENANCE' ? 'bg-indigo-600' : 'bg-indigo-600'} rounded-2xl shadow-lg shadow-indigo-100 text-white`}>
-            {getIcon(resource.type)}
+          <div className={`p-3 ${typeConfig.color} rounded-2xl shadow-lg ${typeConfig.shadow} text-white`}>
+            {typeConfig.icon}
           </div>
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border ${config.bg} ${config.color} ${config.border} text-[9px] font-black uppercase tracking-widest`}>
             {resource.status === 'MAINTENANCE' && <WifiOff size={10} />}
