@@ -11,9 +11,12 @@ import java.util.Optional;
 public class ResourceService {
 
     private final ResourceRepository resourceRepository;
+    private final NotificationService notificationService;
 
-    public ResourceService(ResourceRepository resourceRepository) {
+    public ResourceService(ResourceRepository resourceRepository,
+                           NotificationService notificationService) {
         this.resourceRepository = resourceRepository;
+        this.notificationService = notificationService;
     }
 
     // Get all resources
@@ -28,22 +31,57 @@ public class ResourceService {
 
     // Create resource
     public Resource createResource(Resource resource) {
-        return resourceRepository.save(resource);
+        Resource saved = resourceRepository.save(resource);
+
+        notificationService.createNotification(
+                "Added resource " + saved.getName(),
+                "ADD",
+                "RESOURCE",
+                saved.getId(),
+                "Admin"
+        );
+
+        return saved;
     }
 
+    // Update resource
     public Resource updateResource(Long id, Resource updatedResource) {
-    return resourceRepository.findById(id).map(resource -> {
-        resource.setName(updatedResource.getName());
-        resource.setType(updatedResource.getType());
-        resource.setCapacity(updatedResource.getCapacity());
-        resource.setLocation(updatedResource.getLocation());
-        resource.setStatus(updatedResource.getStatus());
-        return resourceRepository.save(resource);
-    }).orElseThrow(() -> new RuntimeException("Resource not found"));
-}
+        return resourceRepository.findById(id).map(resource -> {
+            resource.setName(updatedResource.getName());
+            resource.setType(updatedResource.getType());
+            resource.setCapacity(updatedResource.getCapacity());
+            resource.setLocation(updatedResource.getLocation());
+            resource.setStatus(updatedResource.getStatus());
+
+            Resource saved = resourceRepository.save(resource);
+
+            notificationService.createNotification(
+                    "Updated resource " + saved.getName(),
+                    "UPDATE",
+                    "RESOURCE",
+                    saved.getId(),
+                    "Admin"
+            );
+
+            return saved;
+        }).orElseThrow(() -> new RuntimeException("Resource not found"));
+    }
 
     // Delete resource
     public void deleteResource(Long id) {
+        Resource resource = resourceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Resource not found"));
+
+        String resourceName = resource.getName();
+
         resourceRepository.deleteById(id);
+
+        notificationService.createNotification(
+                "Deleted resource " + resourceName,
+                "DELETE",
+                "RESOURCE",
+                id,
+                "Admin"
+        );
     }
 }

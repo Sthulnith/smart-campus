@@ -12,7 +12,7 @@ function Sidebar() {
 
   return (
     <div className="w-64 bg-blue-700 text-white min-h-screen p-6 space-y-6">
-
+      
       <h1 className="text-xl font-bold">Smart Campus</h1>
 
       <nav className="space-y-3">
@@ -53,6 +53,17 @@ function Sidebar() {
         {isAdmin && (
           <>
             <NavLink
+              to="/notifications"
+              className={({ isActive }) =>
+                isActive
+                  ? "block bg-blue-600 p-2 rounded"
+                  : "block hover:bg-blue-600 p-2 rounded"
+              }
+            >
+              Notifications
+            </NavLink>
+
+            <NavLink
               to="/admin-bookings"
               className={({ isActive }) =>
                 isActive
@@ -62,6 +73,7 @@ function Sidebar() {
             >
               Admin Bookings
             </NavLink>
+
             <NavLink
               to="/admin/create-admin"
               className={({ isActive }) =>
@@ -83,7 +95,6 @@ function Sidebar() {
       >
         Logout
       </button>
-
     </div>
   );
 }

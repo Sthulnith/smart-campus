@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-dom";
+import NotificationPage from "./pages/NotificationPage";
 
 import AdminRoute from "./components/AdminRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -34,6 +35,16 @@ function AppLayout() {
             <Route path="/bookings" element={<BookingPage />} />
             <Route path="/tickets" element={<TicketPage />} />
             <Route path="/user-bookings" element={<UserBookingPage />} />
+
+            <Route
+              path="/notifications"
+              element={
+                <AdminRoute>
+                  <NotificationPage />
+                </AdminRoute>
+              }
+            />
+
             <Route
               path="/admin-bookings"
               element={
