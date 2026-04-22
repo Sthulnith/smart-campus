@@ -1,9 +1,20 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { 
+  LayoutDashboard, 
+  Building2, 
+  Calendar, 
+  Ticket, 
+  Bell, 
+  Users, 
+  User, 
+  LogOut,
+  GraduationCap
+} from "lucide-react";
 
 function Sidebar() {
-  const { isAdmin, logout } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -11,80 +22,84 @@ function Sidebar() {
   };
 
   return (
-    <div className="w-64 bg-blue-700 text-white min-h-screen p-6 space-y-6">
+    <div className="w-72 bg-white h-screen sticky top-0 border-r border-slate-50 flex flex-col p-8 gap-10">
+      
+      {/* Brand */}
+      <div className="flex items-center gap-3 px-2">
+        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
+          <GraduationCap className="w-6 h-6 text-white" />
+        </div>
+        <h1 className="text-xl font-black text-slate-900 tracking-tight">EduNexus</h1>
+      </div>
 
-      <h1 className="text-xl font-bold">Smart Campus</h1>
-
-      <nav className="space-y-3">
-
-        <NavLink
-          to="/resources"
-          className={({ isActive }) =>
-            isActive
-              ? "block bg-blue-600 p-2 rounded"
-              : "block hover:bg-blue-600 p-2 rounded"
-          }
-        >
-          Resources
-        </NavLink>
-
-        <NavLink
-          to="/bookings"
-          className={({ isActive }) =>
-            isActive
-              ? "block bg-blue-600 p-2 rounded"
-              : "block hover:bg-blue-600 p-2 rounded"
-          }
-        >
-          Bookings
-        </NavLink>
-
-        <NavLink
-          to="/tickets"
-          className={({ isActive }) =>
-            isActive
-              ? "block bg-blue-600 p-2 rounded"
-              : "block hover:bg-blue-600 p-2 rounded"
-          }
-        >
-          Tickets
-        </NavLink>
-
+      {/* Navigation */}
+      <nav className="flex-1 flex flex-col gap-2">
+        <SidebarLink to="/resources" icon={<LayoutDashboard size={20} />} label="Dashboard" />
+        <SidebarLink to="/facilities" icon={<Building2 size={20} />} label="Facilities" />
+        
+        {!isAdmin && (
+          <SidebarLink to="/bookings" icon={<Calendar size={20} />} label="My Bookings" />
+        )}
+        
         {isAdmin && (
-          <>
-            <NavLink
-              to="/admin-bookings"
-              className={({ isActive }) =>
-                isActive
-                  ? "block bg-blue-600 p-2 rounded"
-                  : "block hover:bg-blue-600 p-2 rounded"
-              }
-            >
-              Admin Bookings
-            </NavLink>
-            <NavLink
-              to="/admin/create-admin"
-              className={({ isActive }) =>
-                isActive
-                  ? "block bg-blue-600 p-2 rounded"
-                  : "block hover:bg-blue-600 p-2 rounded"
-              }
-            >
-              Create Admin
-            </NavLink>
-          </>
+          <SidebarLink to="/admin-bookings" icon={<Calendar size={20} />} label="Bookings" />
         )}
 
+        <SidebarLink to="/tickets" icon={<Ticket size={20} />} label="Tickets" />
+        <SidebarLink to="/notifications" icon={<Bell size={20} />} label="Notifications" />
+        
+        {isAdmin && (
+          <SidebarLink to="/admin/create-admin" icon={<Users size={20} />} label="Manage Users" />
+        )}
+        
+        <SidebarLink to="/profile" icon={<User size={20} />} label="Profile" />
       </nav>
 
-      <button
-        onClick={handleLogout}
-        className="w-full bg-red-600 hover:bg-red-700 py-2 rounded"
-      >
-        Logout
-      </button>
+      {/* Footer User Card */}
+      <div className="flex flex-col gap-6">
+        <div className="bg-slate-50/50 p-4 rounded-[24px] border border-slate-50/50 flex items-center gap-4 group hover:bg-white hover:shadow-xl hover:shadow-slate-100 transition-all duration-500">
+          <div className="relative">
+            <div className="w-12 h-12 rounded-full border-2 border-white shadow-sm overflow-hidden bg-slate-200">
+               <img 
+                 src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'default'}`} 
+                 alt="Avatar" 
+                 className="w-full h-full object-cover"
+               />
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-black text-slate-800 truncate tracking-tight leading-tight">{user?.name || "User"}</p>
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{user?.role?.replace("ROLE_", "") || "Guest"}</p>
+          </div>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-6 py-2 text-rose-500 font-black text-xs tracking-tight hover:opacity-80 transition-all group"
+        >
+          <LogOut size={18} className="text-rose-500 transition-transform group-hover:translate-x-1" />
+          <span>Logout</span>
+        </button>
+      </div>
 
     </div>
+  );
+}
+
+function SidebarLink({ to, icon, label }) {
+  return (
+    <NavLink
+      to={to}
+      className={({ isActive }) => `
+        flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300
+        ${isActive 
+          ? "bg-indigo-50 text-indigo-600 shadow-sm shadow-indigo-50" 
+          : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"}
+      `}
+    >
+      <span className="transition-transform duration-300">{icon}</span>
+      <span className="text-xs font-bold tracking-tight">{label}</span>
+    </NavLink>
   );
 }
 
