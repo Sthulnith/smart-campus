@@ -2,6 +2,7 @@ package com.smartcampus.backend.controller;
 
 import com.smartcampus.backend.dto.SigninRequest;
 import com.smartcampus.backend.dto.SignupRequest;
+import com.smartcampus.backend.dto.UpdateProfileRequest;
 import com.smartcampus.backend.dto.UserRegisterRequest;
 import com.smartcampus.backend.exception.EmailInUseException;
 import com.smartcampus.backend.model.AppUser;
@@ -31,6 +32,7 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -163,6 +165,44 @@ public class AuthController {
         body.put("provider", appUser.getProvider());
         body.put("authorities", authorities);
 
+        return ResponseEntity.ok(body);
+    }
+
+    @PatchMapping("/me")
+    @Transactional
+    public ResponseEntity<?> updateMe(
+            Authentication authentication,
+            @Valid @RequestBody UpdateProfileRequest request
+    ) {
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
+            return unauthorizedEntity();
+        }
+
+        AppUser appUser = resolveAppUser(authentication);
+        if (appUser == null) {
+            return unauthorizedEntity();
+        }
+
+        String rawName = request.getName();
+        String newName = rawName == null ? "" : rawName.trim().replaceAll("\\s+", " ");
+        if (newName.isBlank()) {
+            return ResponseEntity.badRequest().body(authBody(
+                    "Bad Request",
+                    "Name is required.",
+                    "INVALID_NAME"
+            ));
+        }
+
+        appUser.setName(newName);
+        appUserRepository.save(appUser);
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("message", "Profile updated.");
+        body.put("code", "PROFILE_UPDATED");
+        body.put("timestamp", Instant.now().toString());
+        body.put("name", appUser.getName());
         return ResponseEntity.ok(body);
     }
 
