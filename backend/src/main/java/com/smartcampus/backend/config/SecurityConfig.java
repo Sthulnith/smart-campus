@@ -63,7 +63,10 @@ public class SecurityConfig {
                                 "/api/auth/reset-password"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/admin/users/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/admin/users").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/admin/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/admin/users/**").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.GET, "/api/resources/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/resources/**").hasRole("ADMIN")
@@ -73,12 +76,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/bookings/*/approve").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/bookings/*/reject").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/bookings/**").hasRole("ADMIN")
-                        .requestMatchers("/api/bookings/**").hasAnyRole("USER", "ADMIN", "STUDENT", "STAFF")
+                        .requestMatchers("/api/bookings/**").hasAnyRole("USER", "ADMIN", "STUDENT", "STAFF", "TECHNICIAN")
 
                         .requestMatchers(HttpMethod.GET, "/api/tickets/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/tickets/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/tickets/*/assign").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/tickets/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/tickets/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/tickets/**").hasAnyRole("USER", "ADMIN")
 
                         .requestMatchers("/api/**").authenticated()

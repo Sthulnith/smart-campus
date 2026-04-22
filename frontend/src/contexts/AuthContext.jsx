@@ -58,6 +58,7 @@ export function AuthProvider({ children }) {
   const isAdmin = hasRole("ROLE_ADMIN");
   const isStudent = hasRole("ROLE_STUDENT");
   const isStaff = hasRole("ROLE_STAFF");
+  const isTechnician = hasRole("ROLE_TECHNICIAN");
 
   const value = useMemo(
     () => ({
@@ -65,6 +66,7 @@ export function AuthProvider({ children }) {
       isAdmin,
       isStudent,
       isStaff,
+      isTechnician,
       hasRole,
       loading,
       fetchCurrentUser,
@@ -73,7 +75,7 @@ export function AuthProvider({ children }) {
       signUp,
       setUser,
     }),
-    [user, isAdmin, isStudent, isStaff, hasRole, loading, fetchCurrentUser, logout, signInWithPassword, signUp]
+    [user, isAdmin, isStudent, isStaff, isTechnician, hasRole, loading, fetchCurrentUser, logout, signInWithPassword, signUp]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

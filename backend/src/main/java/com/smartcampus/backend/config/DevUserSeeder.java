@@ -43,6 +43,15 @@ public class DevUserSeeder {
                     "User@123",
                     UserRole.ROLE_USER
             );
+
+                seedIfMissing(
+                    appUserRepository,
+                    passwordEncoder,
+                    "Technician User",
+                    "technician@test.com",
+                    "Tech@123",
+                    UserRole.ROLE_TECHNICIAN
+                );
         };
     }
 

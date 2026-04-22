@@ -15,11 +15,13 @@ import AuthCallbackPage from "./pages/AuthCallbackPage";
 import UserBookingPage from "./pages/UserBookingPage";
 import AdminBookingPage from "./pages/AdminBookingPage";
 import AdminCreateAdminPage from "./pages/AdminCreateAdminPage";
+import AdminTicketPage from "./pages/AdminTicketPage";
+import TechnicianTicketPage from "./pages/TechnicianTicketPage";
 import ResourcePage from "./pages/ResourcePage";
 import TicketPage from "./pages/TicketPage";
 
 function AppLayout() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isTechnician } = useAuth();
 
   return (
     <div className="flex">
@@ -37,7 +39,7 @@ function AppLayout() {
               path="/bookings" 
               element={isAdmin ? <Navigate to="/admin-bookings" replace /> : <UserBookingPage />} 
             />
-            <Route path="/tickets" element={<TicketPage />} />
+            <Route path="/tickets" element={isAdmin ? <Navigate to="/admin-tickets" replace /> : isTechnician ? <Navigate to="/technician-tickets" replace /> : <TicketPage />} />
             <Route path="/notifications" element={<div className="p-8 text-center font-bold text-slate-400">Notifications coming soon...</div>} />
             <Route path="/profile" element={<div className="p-8 text-center font-bold text-slate-400">Profile page coming soon...</div>} />
             
@@ -57,6 +59,15 @@ function AppLayout() {
                 </AdminRoute>
               }
             />
+            <Route
+              path="/admin-tickets"
+              element={
+                <AdminRoute>
+                  <AdminTicketPage />
+                </AdminRoute>
+              }
+            />
+            <Route path="/technician-tickets" element={<TechnicianTicketPage />} />
           </Routes>
         </div>
       </div>

@@ -1,6 +1,9 @@
 package com.smartcampus.backend.controller;
 
+import com.smartcampus.backend.model.AppUser;
 import com.smartcampus.backend.model.Ticket;
+import com.smartcampus.backend.model.UserRole;
+import com.smartcampus.backend.repository.AppUserRepository;
 import com.smartcampus.backend.repository.TicketRepository;
 import com.smartcampus.backend.service.FileStorageService;
 
@@ -20,6 +23,9 @@ public class TicketController {
 
     @Autowired
     private FileStorageService fileStorageService;
+
+    @Autowired
+    private AppUserRepository appUserRepository;
 
     //  GET ALL
     @GetMapping
@@ -64,6 +70,13 @@ public Ticket updateTicket(@PathVariable Long id, @RequestBody Ticket updated) {
 
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+        AppUser technician = appUserRepository.findById(technicianId)
+            .orElseThrow(() -> new RuntimeException("Technician not found"));
+
+        if (technician.getRole() != UserRole.ROLE_TECHNICIAN) {
+            throw new RuntimeException("Assigned user must have technician role");
+        }
 
         ticket.setAssignedTo(technicianId);
         ticket.setStatus("IN_PROGRESS");

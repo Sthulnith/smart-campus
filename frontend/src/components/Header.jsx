@@ -12,7 +12,7 @@ function Header() {
     const path = location.pathname;
     if (path === "/" || path === "/resources" || path === "/facilities") return "FACILITIES";
     if (path === "/bookings" || path === "/admin-bookings") return "BOOKINGS";
-    if (path === "/tickets") return "TICKETS";
+    if (path === "/tickets" || path === "/admin-tickets" || path === "/technician-tickets") return "TICKETS";
     if (path === "/notifications") return "NOTIFICATIONS";
     if (path === "/profile") return "PROFILE";
     if (path === "/admin/create-admin") return "MANAGE USERS";

@@ -1,160 +1,183 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import API from "../services/api";
-import { AuthAlert, AuthCard, AuthShell } from "../components/AuthShell";
+import { RefreshCcw, UsersRound } from "lucide-react";
 import { getApiErrorMessage } from "../utils/authApi";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PWD_HINT = "At least 8 characters with one letter and one number.";
+const ROLE_OPTIONS = ["ROLE_USER", "ROLE_ADMIN", "ROLE_STUDENT", "ROLE_STAFF", "ROLE_TECHNICIAN"];
 
 function AdminCreateAdminPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [savingUserId, setSavingUserId] = useState(null);
+  const [selectedRoles, setSelectedRoles] = useState({});
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
-  const validate = () => {
-    if (!name.trim()) return "Enter a name.";
-    if (!email.trim()) return "Enter an email.";
-    if (!EMAIL_REGEX.test(email.trim())) return "Enter a valid email address.";
-    if (password.length < 8) return "Password must be at least 8 characters.";
-    if (!/(?=.*[A-Za-z])(?=.*\d)/.test(password)) return "Password must include at least one letter and one number.";
-    if (password !== confirmPassword) return "Passwords do not match.";
-    return null;
-  };
-
-  const onSubmit = async (e) => {
-    e.preventDefault();
+  const loadUsers = async () => {
     setError("");
     setSuccessMessage("");
-
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
-    setSubmitting(true);
     try {
-      const { data } = await API.post("/admin/users", {
-        name: name.trim(),
-        email: email.trim(),
-        password,
+      setLoading(true);
+      const { data } = await API.get("/admin/users");
+      const list = Array.isArray(data) ? data : [];
+      setUsers(list);
+
+      const nextSelected = {};
+      list.forEach((user) => {
+        nextSelected[user.id] = user.role;
       });
-      setSuccessMessage(data?.message || "Admin account created successfully");
-      setName("");
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
+      setSelectedRoles(nextSelected);
     } catch (err) {
-      setError(getApiErrorMessage(err, "Could not create admin account."));
+      setError(getApiErrorMessage(err, "Could not load users."));
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const sortedUsers = useMemo(
+    () => [...users].sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""))),
+    [users]
+  );
+
+  const saveRole = async (user) => {
+    const selectedRole = selectedRoles[user.id];
+    if (!selectedRole || selectedRole === user.role) return;
+
+    setSavingUserId(user.id);
+    setError("");
+    setSuccessMessage("");
+    try {
+      const { data } = await API.put(`/admin/users/${user.id}/role`, {
+        role: selectedRole,
+      });
+
+      setUsers((prev) =>
+        prev.map((item) =>
+          item.id === user.id
+            ? {
+                ...item,
+                role: data?.role || selectedRole,
+              }
+            : item
+        )
+      );
+
+      setSuccessMessage(data?.message || "Role updated successfully.");
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Could not update role."));
+    } finally {
+      setSavingUserId(null);
+    }
+  };
+
+  const getDisplayRole = (role) => String(role || "").replace("ROLE_", "");
+
   return (
-    <AuthShell>
-      <AuthCard>
-        <div className="px-8 pt-8 pb-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 mb-1">Smart Campus</p>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Create admin account</h1>
-          <p className="text-slate-600 mt-2 text-sm leading-relaxed">
-            Admin-only form for creating a new administrator user.
-          </p>
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <UsersRound className="w-7 h-7 text-slate-800" />
+          <h1 className="text-4xl font-black tracking-tight text-slate-900">User Role Management</h1>
         </div>
 
-        <form onSubmit={onSubmit} className="px-8 pb-8 pt-4 space-y-4" noValidate aria-busy={submitting}>
-          {successMessage && <AuthAlert variant="success">{successMessage}</AuthAlert>}
-          {error && <AuthAlert variant="error">{error}</AuthAlert>}
+        <button
+          onClick={loadUsers}
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl border border-slate-200 bg-white text-slate-700 font-bold text-sm hover:bg-slate-50 transition"
+          disabled={loading}
+        >
+          <RefreshCcw size={16} className={loading ? "animate-spin" : ""} />
+          Refresh
+        </button>
+      </div>
 
-          <div>
-            <label htmlFor="admin-name" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Name
-            </label>
-            <input
-              id="admin-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none disabled:bg-slate-50"
-              placeholder="Admin Name"
-              disabled={submitting}
-              required
-            />
-          </div>
+      {successMessage && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 px-4 py-3 text-sm font-medium">
+          {successMessage}
+        </div>
+      )}
 
-          <div>
-            <label htmlFor="admin-email" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Email
-            </label>
-            <input
-              id="admin-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none disabled:bg-slate-50"
-              placeholder="admin@university.edu"
-              disabled={submitting}
-              required
-            />
-          </div>
+      {error && (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 text-rose-700 px-4 py-3 text-sm font-medium">
+          {error}
+        </div>
+      )}
 
-          <div>
-            <label htmlFor="admin-password" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                id="admin-password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 pr-16 text-slate-900 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none disabled:bg-slate-50"
-                placeholder="Create a password"
-                disabled={submitting}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-500 hover:text-slate-800 px-2 py-1 rounded-lg"
-                tabIndex={-1}
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
-            </div>
-            <p className="text-xs text-slate-500 mt-1.5">{PWD_HINT}</p>
-          </div>
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-x-auto">
+        <table className="min-w-full">
+          <thead className="bg-slate-50/80 border-b border-slate-100">
+            <tr className="text-left text-slate-700 text-sm font-black">
+              <th className="px-6 py-4">Name</th>
+              <th className="px-6 py-4">Email</th>
+              <th className="px-6 py-4">Provider</th>
+              <th className="px-6 py-4">Current Role</th>
+              <th className="px-6 py-4">New Role</th>
+              <th className="px-6 py-4">Action</th>
+            </tr>
+          </thead>
 
-          <div>
-            <label htmlFor="admin-confirm-password" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Confirm password
-            </label>
-            <input
-              id="admin-confirm-password"
-              type={showPassword ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none disabled:bg-slate-50"
-              placeholder="Repeat password"
-              disabled={submitting}
-              required
-            />
-          </div>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td className="px-6 py-10 text-sm text-slate-500" colSpan={6}>Loading users...</td>
+              </tr>
+            ) : sortedUsers.length === 0 ? (
+              <tr>
+                <td className="px-6 py-10 text-sm text-slate-500" colSpan={6}>No users found.</td>
+              </tr>
+            ) : (
+              sortedUsers.map((user) => {
+                const selectedRole = selectedRoles[user.id] || user.role;
+                const saving = savingUserId === user.id;
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/25 disabled:opacity-55 disabled:cursor-not-allowed transition"
-          >
-            {submitting ? "Creating admin…" : "Create admin"}
-          </button>
-        </form>
-      </AuthCard>
-    </AuthShell>
+                return (
+                  <tr key={user.id} className="border-b border-slate-100 last:border-b-0">
+                    <td className="px-6 py-4 text-slate-800 font-semibold">{user.name || "-"}</td>
+                    <td className="px-6 py-4 text-slate-700">{user.email || "-"}</td>
+                    <td className="px-6 py-4 text-slate-700 uppercase">{user.provider || "LOCAL"}</td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-black tracking-wide uppercase">
+                        {getDisplayRole(user.role)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <select
+                        className="w-full md:w-56 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-700 text-sm outline-none focus:border-emerald-500"
+                        value={selectedRole}
+                        onChange={(e) =>
+                          setSelectedRoles((prev) => ({
+                            ...prev,
+                            [user.id]: e.target.value,
+                          }))
+                        }
+                      >
+                        {ROLE_OPTIONS.map((role) => (
+                          <option key={role} value={role}>
+                            {getDisplayRole(role)}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => saveRole(user)}
+                        disabled={saving || selectedRole === user.role}
+                        className="inline-flex items-center justify-center min-w-20 px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      >
+                        {saving ? "Saving..." : "Save"}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 

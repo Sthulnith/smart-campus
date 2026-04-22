@@ -16,7 +16,9 @@ import {
   Info,
   ChevronDown,
   FileImage,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Edit2,
+  Trash2
 } from "lucide-react";
 
 function TicketPage() {
@@ -24,11 +26,24 @@ function TicketPage() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedImages, setSelectedImages] = useState([]);
+  const [editingTicket, setEditingTicket] = useState(null);
+  const [deletingTicketId, setDeletingTicketId] = useState(null);
 
   const [form, setForm] = useState({
+    title: "",
+    description: "",
+    urgency: "LOW",
+    category: "HARDWARE",
+    location: "",
+    contact: ""
+  });
+
+  const [editForm, setEditForm] = useState({
     title: "",
     description: "",
     urgency: "LOW",
@@ -55,6 +70,55 @@ function TicketPage() {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleEditChange = (e) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+  const openEditModal = (ticket) => {
+    setEditingTicket(ticket);
+    setEditForm({
+      title: ticket.title || "",
+      description: ticket.description || "",
+      urgency: ticket.urgency || "LOW",
+      category: ticket.category || "HARDWARE",
+      location: ticket.location || "",
+      contact: ticket.contact || ""
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await API.put(`/tickets/${editingTicket.id}`, editForm);
+      setIsEditModalOpen(false);
+      setEditingTicket(null);
+      fetchTickets();
+      alert("Ticket updated successfully!");
+    } catch (err) {
+      console.error("Edit error:", err);
+      alert("Failed to update ticket");
+    }
+  };
+
+  const openDeleteModal = (ticketId) => {
+    setDeletingTicketId(ticketId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await API.delete(`/tickets/${deletingTicketId}`);
+      setIsDeleteModalOpen(false);
+      setDeletingTicketId(null);
+      fetchTickets();
+      alert("Ticket deleted successfully!");
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Failed to delete ticket");
+    }
   };
 
   const handleUploadClick = () => {
@@ -176,7 +240,14 @@ function TicketPage() {
             </div>
           ) : (
              <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredTickets.map(t => <TicketCard key={t.id} ticket={t} />)}
+                {filteredTickets.map(t => (
+                  <TicketCard 
+                    key={t.id} 
+                    ticket={t} 
+                    onEdit={openEditModal}
+                    onDelete={openDeleteModal}
+                  />
+                ))}
              </div>
           )}
         </div>
@@ -286,6 +357,106 @@ function TicketPage() {
           </div>
         </div>
       )}
+
+      {/* Edit Ticket Modal */}
+      {isEditModalOpen && editingTicket && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-white/80">
+              <div>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Edit Ticket</h2>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5 flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div> Update Maintenance Record</p>
+              </div>
+              <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-full transition">
+                <X className="w-6 h-6 text-slate-400" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+              <div className="space-y-6">
+                <FormField label="Incident Title" hint={`${editForm.title.length}/200`}>
+                  <input name="title" value={editForm.title} onChange={handleEditChange} placeholder="e.g. Broken Lighting in Hallway B" className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" required maxLength={200} />
+                </FormField>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <FormField label="Urgency Level">
+                    <select name="urgency" value={editForm.urgency} onChange={handleEditChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-black uppercase outline-none focus:border-indigo-500 transition cursor-pointer">
+                      <option value="LOW">LOW</option>
+                      <option value="MEDIUM">MEDIUM</option>
+                      <option value="HIGH">HIGH</option>
+                    </select>
+                  </FormField>
+                  <FormField label="Issue Category">
+                    <select name="category" value={editForm.category} onChange={handleEditChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-black uppercase outline-none focus:border-indigo-500 transition cursor-pointer">
+                      <option value="HARDWARE">HARDWARE</option>
+                      <option value="SOFTWARE">SOFTWARE</option>
+                      <option value="PLUMBING">PLUMBING</option>
+                      <option value="ELECTRICAL">ELECTRICAL</option>
+                    </select>
+                  </FormField>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <FormField label="Facility / Room">
+                    <input name="location" value={editForm.location} onChange={handleEditChange} placeholder="e.g. Block C - 302" className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" required />
+                  </FormField>
+                  <FormField label="Contact Extension">
+                    <input name="contact" value={editForm.contact} onChange={handleEditChange} placeholder="e.g. +94 77..." className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" />
+                  </FormField>
+                </div>
+
+                <FormField label="Incident Description" hint="No limit on detail">
+                   <textarea name="description" value={editForm.description} onChange={handleEditChange} placeholder="Provide technical details about the issue..." className="w-full bg-slate-50 border border-slate-100 rounded-[24px] p-6 text-xs font-bold outline-none focus:border-indigo-500 transition min-h-[120px] resize-none" required />
+                </FormField>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-4 bg-slate-50 text-xs font-black text-slate-500 uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition">Cancel</button>
+                <button type="submit" className="flex-[2] bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition flex items-center justify-center gap-3 active:scale-95">
+                  <Send size={16} />
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-8 flex flex-col items-center text-center space-y-6">
+              <div className="p-4 bg-rose-50 rounded-full">
+                <AlertCircle className="w-8 h-8 text-rose-600" />
+              </div>
+              
+              <div>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Delete Ticket?</h2>
+                <p className="text-sm text-slate-500 mt-2">This action cannot be undone. The ticket and all associated data will be permanently removed from the system.</p>
+              </div>
+
+              <div className="flex gap-4 w-full pt-4">
+                <button 
+                  type="button" 
+                  onClick={() => setIsDeleteModalOpen(false)} 
+                  className="flex-1 py-4 bg-slate-50 text-xs font-black text-slate-500 uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button"
+                  onClick={handleDelete} 
+                  className="flex-1 bg-rose-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-700 shadow-xl shadow-rose-100 transition flex items-center justify-center gap-3 active:scale-95"
+                >
+                  <Trash2 size={16} />
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -329,7 +500,7 @@ function FormField({ label, children, hint, hintColor = "text-slate-300" }) {
   );
 }
 
-function TicketCard({ ticket }) {
+function TicketCard({ ticket, onEdit, onDelete }) {
   const urgencyColors = {
     LOW: "text-emerald-500 bg-emerald-50 border-emerald-100",
     MEDIUM: "text-amber-500 bg-amber-50 border-amber-100",
@@ -364,6 +535,23 @@ function TicketCard({ ticket }) {
            </div>
            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">ID: T-{100 + ticket.id}</span>
         </div>
+      </div>
+
+      <div className="flex gap-2 mt-6 pt-4 border-t border-slate-50">
+        <button 
+          onClick={() => onEdit(ticket)}
+          className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-lg transition"
+        >
+          <Edit2 size={14} />
+          Edit
+        </button>
+        <button 
+          onClick={() => onDelete(ticket.id)}
+          className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-black uppercase tracking-widest rounded-lg transition"
+        >
+          <Trash2 size={14} />
+          Delete
+        </button>
       </div>
     </div>
   );
