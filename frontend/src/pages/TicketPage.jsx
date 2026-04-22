@@ -488,6 +488,20 @@ function TicketCard({ ticket, onEdit, onDelete, expanded, onToggleComments, curr
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editCommentText, setEditCommentText] = useState("");
 
+  const formatDuration = (start, end) => {
+    const diffMs = end - start;
+    const totalMin = Math.floor(diffMs / 60000);
+    if (totalMin < 1) return "< 1 min";
+    const days = Math.floor(totalMin / 1440);
+    const hours = Math.floor((totalMin % 1440) / 60);
+    const mins = totalMin % 60;
+    const parts = [];
+    if (days > 0) parts.push(`${days} day${days > 1 ? "s" : ""}`);
+    if (hours > 0) parts.push(`${hours} hr`);
+    if (mins > 0) parts.push(`${mins} min`);
+    return parts.join(" ") || "< 1 min";
+  };
+
   const priorityColors = {
     LOW: "text-emerald-500 bg-emerald-50 border-emerald-100",
     MEDIUM: "text-amber-500 bg-amber-50 border-amber-100",
@@ -588,6 +602,54 @@ function TicketCard({ ticket, onEdit, onDelete, expanded, onToggleComments, curr
             <p className="text-[10px] font-bold text-emerald-600">Resolution: {ticket.resolutionNotes}</p>
           </div>
         )}
+
+        {/* Timeline Details */}
+        <div className="p-4 bg-slate-50/80 rounded-2xl space-y-2.5 border border-slate-100">
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Timeline</p>
+
+          {ticket.createdAt && (
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-bold text-slate-500">Created</span>
+              <span className="text-[10px] font-semibold text-slate-700">
+                {new Date(ticket.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true })}
+              </span>
+            </div>
+          )}
+
+          {ticket.firstResponseAt && (
+            <>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-bold text-slate-500">First Response</span>
+                <span className="text-[10px] font-semibold text-slate-700">
+                  {new Date(ticket.firstResponseAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true })}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-bold text-blue-500">Response Time</span>
+                <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg">
+                  {formatDuration(new Date(ticket.createdAt), new Date(ticket.firstResponseAt))}
+                </span>
+              </div>
+            </>
+          )}
+
+          {ticket.resolvedAt && (
+            <>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-bold text-slate-500">Resolved</span>
+                <span className="text-[10px] font-semibold text-slate-700">
+                  {new Date(ticket.resolvedAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true })}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-bold text-emerald-500">Resolution Time</span>
+                <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">
+                  {formatDuration(new Date(ticket.createdAt), new Date(ticket.resolvedAt))}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-slate-50">
            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">ID: T-{100 + ticket.id}</span>

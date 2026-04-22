@@ -37,6 +37,8 @@ public class Ticket {
 
     private Instant createdAt;
     private Instant updatedAt;
+    private Instant firstResponseAt;
+    private Instant resolvedAt;
 
     @PrePersist
     public void onCreate() {
@@ -98,4 +100,10 @@ public class Ticket {
 
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+
+    public Instant getFirstResponseAt() { return firstResponseAt; }
+    public void setFirstResponseAt(Instant firstResponseAt) { this.firstResponseAt = firstResponseAt; }
+
+    public Instant getResolvedAt() { return resolvedAt; }
+    public void setResolvedAt(Instant resolvedAt) { this.resolvedAt = resolvedAt; }
 }

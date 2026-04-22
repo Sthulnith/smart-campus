@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Instant;
 import java.util.*;
 
 @RestController
@@ -144,12 +145,18 @@ public class TicketController {
             ));
         }
 
+        // Set milestone timestamps
+        if ("IN_PROGRESS".equals(newStatus) && ticket.getFirstResponseAt() == null) {
+            ticket.setFirstResponseAt(Instant.now());
+        }
+
         // RESOLVED requires resolution notes from technician
         if ("RESOLVED".equals(newStatus)) {
             if (resolutionNotes == null || resolutionNotes.isBlank()) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Resolution notes are required"));
             }
             ticket.setResolutionNotes(resolutionNotes);
+            ticket.setResolvedAt(Instant.now());
         }
 
         ticket.setStatus(newStatus);
@@ -173,6 +180,9 @@ public class TicketController {
 
         ticket.setAssignedTo(technicianId);
         ticket.setStatus("IN_PROGRESS");
+        if (ticket.getFirstResponseAt() == null) {
+            ticket.setFirstResponseAt(Instant.now());
+        }
 
         return ticketRepository.save(ticket);
     }
