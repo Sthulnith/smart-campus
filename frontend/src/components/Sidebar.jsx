@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 function Sidebar() {
-  const { user, isAdmin, logout } = useAuth();
+  const { user, isAdmin, isTechnician, logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -45,7 +45,18 @@ function Sidebar() {
           <SidebarLink to="/admin-bookings" icon={<Calendar size={20} />} label="Bookings" />
         )}
 
-        <SidebarLink to="/tickets" icon={<Ticket size={20} />} label="Tickets" />
+        {isAdmin && (
+          <SidebarLink to="/admin-tickets" icon={<Ticket size={20} />} label="Tickets" />
+        )}
+        
+        {isTechnician && (
+          <SidebarLink to="/technician-tickets" icon={<Ticket size={20} />} label="My Tickets" />
+        )}
+        
+        {!isAdmin && !isTechnician && (
+          <SidebarLink to="/tickets" icon={<Ticket size={20} />} label="Tickets" />
+        )}
+        
         <SidebarLink to="/notifications" icon={<Bell size={20} />} label="Notifications" />
         
         {isAdmin && (
