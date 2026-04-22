@@ -10,7 +10,16 @@ public class BackendApplication {
 		Dotenv dotenv = Dotenv.configure()
 				.ignoreIfMissing()
 				.load();
-		dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
+		dotenv.entries().forEach(entry -> {
+			String key = entry.getKey();
+			if (System.getProperty(key) != null) {
+				return;
+			}
+			if (System.getenv(key) != null) {
+				return;
+			}
+			System.setProperty(key, entry.getValue());
+		});
 		SpringApplication.run(BackendApplication.class, args);
 	}
 

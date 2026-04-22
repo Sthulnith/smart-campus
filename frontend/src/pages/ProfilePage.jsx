@@ -1,8 +1,11 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   BadgeCheck,
   CalendarDays,
+  Check,
+  PencilLine,
+  X,
   IdCard,
   LogOut,
   Mail,
@@ -11,10 +14,15 @@ import {
   UserCircle2,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import API from "../services/api";
 
 function ProfilePage() {
   const navigate = useNavigate();
   const { user, logout, fetchCurrentUser } = useAuth();
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const profile = useMemo(
     () => ({
@@ -33,6 +41,14 @@ function ProfilePage() {
     [user]
   );
 
+  useEffect(() => {
+    if (!editingName) {
+      setNameDraft(profile.name);
+      setError("");
+      setSaving(false);
+    }
+  }, [editingName, profile.name]);
+
   const handleRefresh = async () => {
     try {
       await fetchCurrentUser();
@@ -44,6 +60,45 @@ function ProfilePage() {
   const handleLogout = async () => {
     await logout();
     navigate("/login", { replace: true });
+  };
+
+  const openEditName = () => {
+    setEditingName(true);
+    setNameDraft(profile.name);
+    setError("");
+  };
+
+  const cancelEditName = () => {
+    setEditingName(false);
+    setNameDraft(profile.name);
+    setError("");
+  };
+
+  const saveName = async () => {
+    const normalized = nameDraft.trim().replace(/\s+/g, " ");
+    if (normalized.length < 2) {
+      setError("Name must be at least 2 characters.");
+      return;
+    }
+    if (normalized.length > 80) {
+      setError("Name must be 80 characters or less.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError("");
+      await API.patch("/auth/me", { name: normalized });
+      await fetchCurrentUser();
+      setEditingName(false);
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        "Could not update your profile right now. Please try again.";
+      setError(msg);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -68,9 +123,60 @@ function ProfilePage() {
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
                   Account owner
                 </p>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-                  {profile.name}
-                </h2>
+                <div className="flex flex-col gap-2">
+                  {!editingName ? (
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                        {profile.name}
+                      </h2>
+                      <button
+                        onClick={openEditName}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl bg-slate-50 border border-slate-100 text-slate-700 text-[10px] font-black uppercase tracking-widest hover:bg-white hover:shadow-sm transition active:scale-95"
+                      >
+                        <PencilLine className="w-4 h-4 text-indigo-600" />
+                        Edit
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                        <input
+                          value={nameDraft}
+                          onChange={(e) => setNameDraft(e.target.value)}
+                          placeholder="Your name"
+                          className="w-full sm:w-[360px] px-4 py-3 rounded-2xl border border-slate-200 bg-white text-slate-900 text-sm font-bold tracking-tight focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={saveName}
+                            disabled={saving}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-indigo-600 text-white text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                          >
+                            <Check className="w-4 h-4" />
+                            {saving ? "Saving" : "Save"}
+                          </button>
+                          <button
+                            onClick={cancelEditName}
+                            disabled={saving}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-white border border-slate-100 text-slate-700 text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                          >
+                            <X className="w-4 h-4" />
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                      {error ? (
+                        <p className="text-xs font-bold text-rose-600">
+                          {error}
+                        </p>
+                      ) : (
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          Tip: Use your real name (2–80 characters).
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
                 <p className="text-sm font-bold text-slate-500 mt-1">
                   {profile.email}
                 </p>
