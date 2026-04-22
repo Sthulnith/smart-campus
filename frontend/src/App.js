@@ -19,6 +19,8 @@ import AdminTicketPage from "./pages/AdminTicketPage";
 import TechnicianTicketPage from "./pages/TechnicianTicketPage";
 import ResourcePage from "./pages/ResourcePage";
 import TicketPage from "./pages/TicketPage";
+import DashboardPage from "./pages/DashboardPage";
+import BookingAnalysisPage from "./pages/BookingAnalysisPage";
 
 function AppLayout() {
   const { isAdmin, isTechnician } = useAuth();
@@ -32,8 +34,8 @@ function AppLayout() {
 
         <div className="p-6">
           <Routes>
-            <Route path="/" element={<ResourcePage />} />
-            <Route path="/resources" element={<ResourcePage />} />
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/facilities" element={<ResourcePage />} />
             <Route 
               path="/bookings" 
@@ -42,6 +44,7 @@ function AppLayout() {
             <Route path="/tickets" element={isAdmin ? <Navigate to="/admin-tickets" replace /> : isTechnician ? <Navigate to="/technician-tickets" replace /> : <TicketPage />} />
             <Route path="/notifications" element={<div className="p-8 text-center font-bold text-slate-400">Notifications coming soon...</div>} />
             <Route path="/profile" element={<div className="p-8 text-center font-bold text-slate-400">Profile page coming soon...</div>} />
+            <Route path="/booking-analysis" element={<BookingAnalysisPage />} />
             
             <Route
               path="/admin-bookings"

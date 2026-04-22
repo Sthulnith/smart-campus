@@ -7,7 +7,10 @@ import {
   Search, 
   X, 
   Users,
-  MapPin
+  MapPin,
+  Microscope,
+  Cpu,
+  BookOpen
 } from "lucide-react";
 
 function UserBookingPage() {
@@ -57,8 +60,33 @@ function UserBookingPage() {
     }
   };
 
+  const getResourceName = (id) => {
+    const res = resources.find(r => r.id === id);
+    return res ? res.name : `Resource #${id}`;
+  };
+
+  const getResourceCategory = (id) => {
+    const res = resources.find(r => r.id === id);
+    return res ? res.type : "default";
+  };
+
+  const typeConfigs = {
+    "Lecture Hall": { icon: <BookOpen size={14} />, color: "bg-blue-600", shadow: "shadow-blue-100" },
+    "Laboratory": { icon: <Microscope size={14} />, color: "bg-emerald-600", shadow: "shadow-emerald-100" },
+    "Equipment": { icon: <Cpu size={14} />, color: "bg-amber-600", shadow: "shadow-amber-100" },
+    "Meeting Room": { icon: <Users size={14} />, color: "bg-rose-600", shadow: "shadow-rose-100" },
+    "default": { icon: <Users size={14} />, color: "bg-indigo-600", shadow: "shadow-indigo-100" }
+  };
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === "date") {
+      setForm({ ...form, [name]: value, endDate: value });
+    } else if (name === "category") {
+      setForm({ ...form, [name]: value, resourceId: "" });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -81,7 +109,7 @@ function UserBookingPage() {
       fetchBookings();
       alert("Booking request submitted!");
     } catch (err) {
-      alert("Booking failed: " + (err.response?.data?.message || err.message));
+      alert("Booking failed: " + (err.response?.data?.message || err.response?.data || err.message));
     }
   };
 
@@ -175,7 +203,14 @@ function UserBookingPage() {
           ) : (
             <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredBookings.map((b) => (
-                <BookingCard key={b.id} booking={b} onCancel={() => cancelBooking(b.id)} />
+                <BookingCard 
+                  key={b.id} 
+                  booking={b} 
+                  resourceName={getResourceName(b.resourceId)}
+                  category={getResourceCategory(b.resourceId)}
+                  typeConfigs={typeConfigs}
+                  onCancel={() => cancelBooking(b.id)} 
+                />
               ))}
             </div>
           )}
@@ -225,22 +260,27 @@ function UserBookingPage() {
                    <select name="category" value={form.category} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition">
                     <option value="Lecture Hall">Lecture Hall</option>
                     <option value="Laboratory">Laboratory</option>
-                    <option value="Discussion Room">Discussion Room</option>
+                    <option value="Equipment">Equipment</option>
+                    <option value="Meeting Room">Meeting Room</option>
                   </select>
                 </FormField>
-                <FormField label="Building">
+                <FormField label="Specific Resources">
                    <select name="resourceId" value={form.resourceId} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" required>
-                    <option value="">Select Building..</option>
-                    {resources.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                    <option value="">Choose Resource..</option>
+                    {resources
+                      .filter(r => r.type === form.category)
+                      .map(r => <option key={r.id} value={r.id}>{r.name}</option>)
+                    }
                   </select>
                 </FormField>
                 <FormField label="Floor">
-                   <select name="floor" value={form.floor} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition">
-                    <option value="">Select Floor...</option>
-                    <option value="Ground">Ground</option>
-                    <option value="1st Floor">1st Floor</option>
-                    <option value="2nd Floor">2nd Floor</option>
-                  </select>
+                   <input 
+                    name="floor" 
+                    value={form.floor} 
+                    onChange={handleChange} 
+                    placeholder="Enter Floor (e.g. Floor 01)"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" 
+                  />
                 </FormField>
               </div>
 
@@ -257,10 +297,10 @@ function UserBookingPage() {
 
               <div className="grid grid-cols-2 gap-x-6 gap-y-6">
                 <FormField label="Start Date" required>
-                  <input type="date" name="date" value={form.date} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" required />
+                  <input type="date" name="date" value={form.date} min={new Date().toISOString().split("T")[0]} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" required />
                 </FormField>
                 <FormField label="End Date">
-                  <input type="date" name="endDate" className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" />
+                  <input type="date" name="endDate" value={form.endDate} min={form.date || new Date().toISOString().split("T")[0]} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" />
                 </FormField>
                 <FormField label="Start Time" required>
                   <input type="time" name="startTime" value={form.startTime} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" required />
@@ -297,7 +337,7 @@ function UserBookingPage() {
   );
 }
 
-function BookingCard({ booking, onCancel }) {
+function BookingCard({ booking, resourceName, category, typeConfigs, onCancel }) {
   const statusColors = {
     PENDING: "text-amber-500",
     APPROVED: "text-emerald-500",
@@ -305,12 +345,14 @@ function BookingCard({ booking, onCancel }) {
     CANCELLED: "text-slate-400"
   };
 
+  const config = typeConfigs[category] || typeConfigs.default;
+
   return (
     <div className="bg-white p-6 rounded-[32px] border border-slate-50 shadow-sm hover:shadow-xl hover:shadow-slate-100 hover:border-indigo-50 transition-all group flex flex-col justify-between h-full">
       <div className="space-y-4">
         <div className="flex justify-between items-start">
-          <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-indigo-50 transition-colors">
-            <MapPin className="w-5 h-5 text-slate-400 group-hover:text-indigo-600" />
+          <div className={`p-3 ${config.color} rounded-2xl shadow-lg ${config.shadow} text-white`}>
+            {config.icon}
           </div>
           <span className={`text-[10px] font-black uppercase tracking-widest ${statusColors[booking.status] || "text-slate-400"}`}>
             {booking.status}
@@ -322,7 +364,7 @@ function BookingCard({ booking, onCancel }) {
             {booking.purpose || "Resource Booking"}
           </h4>
           <p className="text-xs font-bold text-slate-400 flex items-center gap-1">
-            Resource #{booking.resourceId}
+            {resourceName}
           </p>
         </div>
 
