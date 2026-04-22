@@ -1,28 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import API from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 import { 
-  Ticket, 
-  Plus, 
-  Search, 
-  Filter, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
-  BarChart3, 
-  X, 
-  Send,
-  Upload,
-  User as UserIcon,
-  Info,
-  ChevronDown,
-  FileImage,
-  Image as ImageIcon,
-  Edit2,
-  Trash2
+  Ticket, Plus, Search, Clock, CheckCircle2, AlertCircle, BarChart3, X, Send,
+  Upload, ChevronDown, Edit2, Trash2, MessageSquare, XCircle
 } from "lucide-react";
 
 function TicketPage() {
-  const fileInputRef = React.useRef(null);
+  const { user } = useAuth();
+  const fileInputRef = useRef(null);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,12 +19,13 @@ function TicketPage() {
   const [selectedImages, setSelectedImages] = useState([]);
   const [editingTicket, setEditingTicket] = useState(null);
   const [deletingTicketId, setDeletingTicketId] = useState(null);
+  const [expandedTicketId, setExpandedTicketId] = useState(null);
 
   const [form, setForm] = useState({
     title: "",
     description: "",
-    urgency: "LOW",
-    category: "HARDWARE",
+    priority: "LOW",
+    category: "Hardware",
     location: "",
     contact: ""
   });
@@ -46,8 +33,8 @@ function TicketPage() {
   const [editForm, setEditForm] = useState({
     title: "",
     description: "",
-    urgency: "LOW",
-    category: "HARDWARE",
+    priority: "LOW",
+    category: "Hardware",
     location: "",
     contact: ""
   });
@@ -59,7 +46,7 @@ function TicketPage() {
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const res = await API.get("/tickets");
+      const res = await API.get("/tickets/my");
       setTickets(res.data);
     } catch (err) {
       console.error("Fetch tickets error:", err);
@@ -68,21 +55,16 @@ function TicketPage() {
     }
   };
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleEditChange = (e) => {
-    setEditForm({ ...editForm, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleEditChange = (e) => setEditForm({ ...editForm, [e.target.name]: e.target.value });
 
   const openEditModal = (ticket) => {
     setEditingTicket(ticket);
     setEditForm({
       title: ticket.title || "",
       description: ticket.description || "",
-      urgency: ticket.urgency || "LOW",
-      category: ticket.category || "HARDWARE",
+      priority: ticket.priority || "LOW",
+      category: ticket.category || "Hardware",
       location: ticket.location || "",
       contact: ticket.contact || ""
     });
@@ -96,7 +78,6 @@ function TicketPage() {
       setIsEditModalOpen(false);
       setEditingTicket(null);
       fetchTickets();
-      alert("Ticket updated successfully!");
     } catch (err) {
       console.error("Edit error:", err);
       alert("Failed to update ticket");
@@ -114,58 +95,64 @@ function TicketPage() {
       setIsDeleteModalOpen(false);
       setDeletingTicketId(null);
       fetchTickets();
-      alert("Ticket deleted successfully!");
     } catch (err) {
       console.error("Delete error:", err);
       alert("Failed to delete ticket");
     }
   };
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
+  const handleUploadClick = () => fileInputRef.current?.click();
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length > 0) {
-      const newImages = files.map(file => ({
-        file,
-        preview: URL.createObjectURL(file)
-      }));
+    const validTypes = ["image/jpeg", "image/jpg", "image/png"];
+    const validFiles = files.filter(f => validTypes.includes(f.type));
+    if (validFiles.length !== files.length) {
+      alert("Only JPG, JPEG, and PNG images are allowed.");
+    }
+    if (validFiles.length > 0) {
+      const newImages = validFiles.map(file => ({ file, preview: URL.createObjectURL(file) }));
       setSelectedImages(prev => [...prev, ...newImages].slice(0, 3));
     }
   };
 
-  const removeImage = (index) => {
-    setSelectedImages(prev => prev.filter((_, i) => i !== index));
-  };
+  const removeImage = (index) => setSelectedImages(prev => prev.filter((_, i) => i !== index));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // In a real app, you'd use FormData to upload images
-      await API.post("/tickets", form);
+      const res = await API.post("/tickets", form);
+      const ticketId = res.data.id;
+
+      // Upload images if any
+      if (selectedImages.length > 0) {
+        const formData = new FormData();
+        selectedImages.forEach(img => formData.append("files", img.file));
+        await API.post(`/tickets/${ticketId}/upload`, formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+      }
+
       setIsModalOpen(false);
-      setForm({ title: "", description: "", urgency: "LOW", category: "HARDWARE", location: "", contact: "" });
+      setForm({ title: "", description: "", priority: "LOW", category: "Hardware", location: "", contact: "" });
       setSelectedImages([]);
       fetchTickets();
-      alert("Incident reported successfully!");
     } catch (err) {
-      alert("Report failed");
+      alert(err.response?.data?.message || "Report failed");
     }
   };
 
   const stats = {
     total: tickets.length,
-    pending: tickets.filter(t => t.status === "OPEN" || t.status === "PENDING").length,
+    pending: tickets.filter(t => t.status === "OPEN").length,
     active: tickets.filter(t => t.status === "IN_PROGRESS").length,
     completed: tickets.filter(t => t.status === "RESOLVED" || t.status === "CLOSED").length,
   };
 
   const filteredTickets = tickets.filter(t => 
     (statusFilter === "ALL" || t.status === statusFilter) &&
-    (t.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-     t.description?.toLowerCase().includes(searchTerm.toLowerCase()))
+    ((t.title || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
+     (t.description || "").toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -194,8 +181,8 @@ function TicketPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard label="Total Influx" value={stats.total} icon={<BarChart3 className="w-6 h-6 text-indigo-600" />} color="bg-indigo-50" active={true} />
-        <StatCard label="Pending Task" value={stats.pending} icon={<AlertCircle className="w-6 h-6 text-amber-600" />} color="bg-amber-50" />
-        <StatCard label="Active Work" value={stats.active} icon={<Clock className="w-6 h-6 text-blue-600" />} color="bg-blue-50" />
+        <StatCard label="Open" value={stats.pending} icon={<AlertCircle className="w-6 h-6 text-amber-600" />} color="bg-amber-50" />
+        <StatCard label="In Progress" value={stats.active} icon={<Clock className="w-6 h-6 text-blue-600" />} color="bg-blue-50" />
         <StatCard label="Completed" value={stats.completed} icon={<CheckCircle2 className="w-6 h-6 text-emerald-600" />} color="bg-emerald-50" />
       </div>
 
@@ -208,17 +195,24 @@ function TicketPage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Search by title, location or keywords..." 
+              placeholder="Search by title or description..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-4 bg-slate-50/50 border border-transparent rounded-2xl focus:bg-white focus:border-indigo-100 outline-none transition text-xs font-bold"
             />
           </div>
-          <div className="flex gap-4">
-             <FilterGroup label="All Status" icon={<Clock size={14} className="text-blue-500" />} />
-             <FilterGroup label="Priority" icon={<AlertCircle size={14} className="text-rose-500" />} />
-             <FilterGroup label="Newest" icon={<BarChart3 size={14} className="text-indigo-500" rotate={90} />} />
-          </div>
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-3 bg-slate-50/50 rounded-xl border border-transparent hover:bg-white hover:border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-600 cursor-pointer outline-none"
+          >
+            <option value="ALL">All Status</option>
+            <option value="OPEN">Open</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="RESOLVED">Resolved</option>
+            <option value="CLOSED">Closed</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
         </div>
 
         {/* Tickets Content */}
@@ -246,6 +240,9 @@ function TicketPage() {
                     ticket={t} 
                     onEdit={openEditModal}
                     onDelete={openDeleteModal}
+                    expanded={expandedTicketId === t.id}
+                    onToggleComments={() => setExpandedTicketId(expandedTicketId === t.id ? null : t.id)}
+                    currentUser={user}
                   />
                 ))}
              </div>
@@ -260,7 +257,7 @@ function TicketPage() {
             <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-white/80">
               <div>
                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">Report Incident</h2>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5 flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div> Maintenance Operations</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5 flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-indigo-600 rounded-full inline-block"></span> Maintenance Operations</p>
               </div>
               <button onClick={() => { setIsModalOpen(false); setSelectedImages([]); }} className="p-2 hover:bg-slate-50 rounded-full transition">
                 <X className="w-6 h-6 text-slate-400" />
@@ -274,34 +271,36 @@ function TicketPage() {
                 </FormField>
 
                 <div className="grid grid-cols-2 gap-6">
-                  <FormField label="Urgency Level">
-                    <select name="urgency" value={form.urgency} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-black uppercase outline-none focus:border-indigo-500 transition cursor-pointer">
+                  <FormField label="Priority Level">
+                    <select name="priority" value={form.priority} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-black uppercase outline-none focus:border-indigo-500 transition cursor-pointer">
                       <option value="LOW">LOW</option>
                       <option value="MEDIUM">MEDIUM</option>
                       <option value="HIGH">HIGH</option>
+                      <option value="URGENT">URGENT</option>
                     </select>
                   </FormField>
                   <FormField label="Issue Category">
                     <select name="category" value={form.category} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-black uppercase outline-none focus:border-indigo-500 transition cursor-pointer">
-                      <option value="HARDWARE">HARDWARE</option>
-                      <option value="SOFTWARE">SOFTWARE</option>
-                      <option value="PLUMBING">PLUMBING</option>
-                      <option value="ELECTRICAL">ELECTRICAL</option>
+                      <option value="Hardware">HARDWARE</option>
+                      <option value="Software">SOFTWARE</option>
+                      <option value="Network">NETWORK</option>
+                      <option value="Facility">FACILITY</option>
+                      <option value="Other">OTHER</option>
                     </select>
                   </FormField>
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
-                  <FormField label="Facility / Room">
+                  <FormField label="Facility / Location">
                     <input name="location" value={form.location} onChange={handleChange} placeholder="e.g. Block C - 302" className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" required />
                   </FormField>
-                  <FormField label="Contact Extension">
+                  <FormField label="Preferred Contact">
                     <input name="contact" value={form.contact} onChange={handleChange} placeholder="e.g. +94 77..." className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" />
                   </FormField>
                 </div>
 
-                <FormField label="Visual Evidence" hint={`${selectedImages.length}/3 images selected`} hintColor={selectedImages.length >= 3 ? "text-rose-500" : "text-slate-300"}>
-                   <input type="file" ref={fileInputRef} onChange={handleFileChange} multiple accept="image/*" className="hidden" />
+                <FormField label="Visual Evidence" hint={`${selectedImages.length}/3 images`} hintColor={selectedImages.length >= 3 ? "text-rose-500" : "text-slate-300"}>
+                   <input type="file" ref={fileInputRef} onChange={handleFileChange} multiple accept=".jpg,.jpeg,.png" className="hidden" />
                    
                    {selectedImages.length > 0 ? (
                      <div className="grid grid-cols-3 gap-4">
@@ -335,13 +334,13 @@ function TicketPage() {
                         </div>
                         <div className="text-center">
                           <p className="text-xs font-black text-slate-900 tracking-tight">Click to upload photos</p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">JPG, PNG OR GIF (MAX 3)</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">JPG, JPEG OR PNG (MAX 3)</p>
                         </div>
                      </div>
                    )}
                 </FormField>
 
-                <FormField label="Incident Description" hint="No limit on detail">
+                <FormField label="Incident Description" hint="Required">
                    <textarea name="description" value={form.description} onChange={handleChange} placeholder="Provide technical details about the issue..." className="w-full bg-slate-50 border border-slate-100 rounded-[24px] p-6 text-xs font-bold outline-none focus:border-indigo-500 transition min-h-[120px] resize-none" required />
                 </FormField>
               </div>
@@ -350,7 +349,7 @@ function TicketPage() {
                 <button type="button" onClick={() => { setIsModalOpen(false); setSelectedImages([]); }} className="flex-1 py-4 bg-slate-50 text-xs font-black text-slate-500 uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition">Cancel</button>
                 <button type="submit" className="flex-[2] bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition flex items-center justify-center gap-3 active:scale-95">
                   <Send size={16} />
-                  Transmit Report
+                  Submit Report
                 </button>
               </div>
             </form>
@@ -365,7 +364,7 @@ function TicketPage() {
             <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-white/80">
               <div>
                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">Edit Ticket</h2>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5 flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div> Update Maintenance Record</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5 flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-indigo-600 rounded-full inline-block"></span> Update Maintenance Record</p>
               </div>
               <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-full transition">
                 <X className="w-6 h-6 text-slate-400" />
@@ -375,38 +374,40 @@ function TicketPage() {
             <form onSubmit={handleEditSubmit} className="p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
               <div className="space-y-6">
                 <FormField label="Incident Title" hint={`${editForm.title.length}/200`}>
-                  <input name="title" value={editForm.title} onChange={handleEditChange} placeholder="e.g. Broken Lighting in Hallway B" className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" required maxLength={200} />
+                  <input name="title" value={editForm.title} onChange={handleEditChange} placeholder="e.g. Broken Lighting" className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" required maxLength={200} />
                 </FormField>
 
                 <div className="grid grid-cols-2 gap-6">
-                  <FormField label="Urgency Level">
-                    <select name="urgency" value={editForm.urgency} onChange={handleEditChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-black uppercase outline-none focus:border-indigo-500 transition cursor-pointer">
+                  <FormField label="Priority Level">
+                    <select name="priority" value={editForm.priority} onChange={handleEditChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-black uppercase outline-none focus:border-indigo-500 transition cursor-pointer">
                       <option value="LOW">LOW</option>
                       <option value="MEDIUM">MEDIUM</option>
                       <option value="HIGH">HIGH</option>
+                      <option value="URGENT">URGENT</option>
                     </select>
                   </FormField>
                   <FormField label="Issue Category">
                     <select name="category" value={editForm.category} onChange={handleEditChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-black uppercase outline-none focus:border-indigo-500 transition cursor-pointer">
-                      <option value="HARDWARE">HARDWARE</option>
-                      <option value="SOFTWARE">SOFTWARE</option>
-                      <option value="PLUMBING">PLUMBING</option>
-                      <option value="ELECTRICAL">ELECTRICAL</option>
+                      <option value="Hardware">HARDWARE</option>
+                      <option value="Software">SOFTWARE</option>
+                      <option value="Network">NETWORK</option>
+                      <option value="Facility">FACILITY</option>
+                      <option value="Other">OTHER</option>
                     </select>
                   </FormField>
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
-                  <FormField label="Facility / Room">
+                  <FormField label="Facility / Location">
                     <input name="location" value={editForm.location} onChange={handleEditChange} placeholder="e.g. Block C - 302" className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" required />
                   </FormField>
-                  <FormField label="Contact Extension">
+                  <FormField label="Preferred Contact">
                     <input name="contact" value={editForm.contact} onChange={handleEditChange} placeholder="e.g. +94 77..." className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" />
                   </FormField>
                 </div>
 
-                <FormField label="Incident Description" hint="No limit on detail">
-                   <textarea name="description" value={editForm.description} onChange={handleEditChange} placeholder="Provide technical details about the issue..." className="w-full bg-slate-50 border border-slate-100 rounded-[24px] p-6 text-xs font-bold outline-none focus:border-indigo-500 transition min-h-[120px] resize-none" required />
+                <FormField label="Incident Description">
+                   <textarea name="description" value={editForm.description} onChange={handleEditChange} placeholder="Provide details..." className="w-full bg-slate-50 border border-slate-100 rounded-[24px] p-6 text-xs font-bold outline-none focus:border-indigo-500 transition min-h-[120px] resize-none" required />
                 </FormField>
               </div>
 
@@ -430,25 +431,15 @@ function TicketPage() {
               <div className="p-4 bg-rose-50 rounded-full">
                 <AlertCircle className="w-8 h-8 text-rose-600" />
               </div>
-              
               <div>
                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">Delete Ticket?</h2>
-                <p className="text-sm text-slate-500 mt-2">This action cannot be undone. The ticket and all associated data will be permanently removed from the system.</p>
+                <p className="text-sm text-slate-500 mt-2">This action cannot be undone.</p>
               </div>
-
               <div className="flex gap-4 w-full pt-4">
-                <button 
-                  type="button" 
-                  onClick={() => setIsDeleteModalOpen(false)} 
-                  className="flex-1 py-4 bg-slate-50 text-xs font-black text-slate-500 uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition"
-                >
+                <button type="button" onClick={() => setIsDeleteModalOpen(false)} className="flex-1 py-4 bg-slate-50 text-xs font-black text-slate-500 uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition">
                   Cancel
                 </button>
-                <button 
-                  type="button"
-                  onClick={handleDelete} 
-                  className="flex-1 bg-rose-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-700 shadow-xl shadow-rose-100 transition flex items-center justify-center gap-3 active:scale-95"
-                >
+                <button type="button" onClick={handleDelete} className="flex-1 bg-rose-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-700 shadow-xl shadow-rose-100 transition flex items-center justify-center gap-3 active:scale-95">
                   <Trash2 size={16} />
                   Delete
                 </button>
@@ -478,16 +469,6 @@ function StatCard({ label, value, icon, color, active }) {
   );
 }
 
-function FilterGroup({ label, icon }) {
-  return (
-    <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-50/50 rounded-xl hover:bg-white border border-transparent hover:border-slate-100 transition cursor-pointer">
-      {icon}
-      <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">{label}</span>
-      <ChevronDown size={14} className="text-slate-300 ml-2" />
-    </div>
-  );
-}
-
 function FormField({ label, children, hint, hintColor = "text-slate-300" }) {
   return (
     <div className="space-y-2">
@@ -500,11 +481,72 @@ function FormField({ label, children, hint, hintColor = "text-slate-300" }) {
   );
 }
 
-function TicketCard({ ticket, onEdit, onDelete }) {
-  const urgencyColors = {
+function TicketCard({ ticket, onEdit, onDelete, expanded, onToggleComments, currentUser }) {
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editCommentText, setEditCommentText] = useState("");
+
+  const priorityColors = {
     LOW: "text-emerald-500 bg-emerald-50 border-emerald-100",
     MEDIUM: "text-amber-500 bg-amber-50 border-amber-100",
-    HIGH: "text-rose-500 bg-rose-50 border-rose-100"
+    HIGH: "text-rose-500 bg-rose-50 border-rose-100",
+    URGENT: "text-red-600 bg-red-50 border-red-200"
+  };
+
+  const statusColors = {
+    OPEN: "text-blue-600 bg-blue-50",
+    IN_PROGRESS: "text-amber-600 bg-amber-50",
+    RESOLVED: "text-emerald-600 bg-emerald-50",
+    CLOSED: "text-slate-600 bg-slate-100",
+    REJECTED: "text-rose-600 bg-rose-50"
+  };
+
+  useEffect(() => {
+    if (expanded) fetchComments();
+  }, [expanded]);
+
+  const fetchComments = async () => {
+    setLoadingComments(true);
+    try {
+      const res = await API.get(`/tickets/${ticket.id}/comments`);
+      setComments(res.data);
+    } catch (err) {
+      console.error("Failed to load comments", err);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const addComment = async () => {
+    if (!newComment.trim()) return;
+    try {
+      await API.post(`/tickets/${ticket.id}/comments`, { content: newComment });
+      setNewComment("");
+      fetchComments();
+    } catch (err) {
+      alert("Failed to add comment");
+    }
+  };
+
+  const saveEditComment = async (commentId) => {
+    try {
+      await API.put(`/tickets/${ticket.id}/comments/${commentId}`, { content: editCommentText });
+      setEditingCommentId(null);
+      fetchComments();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to edit comment");
+    }
+  };
+
+  const deleteComment = async (commentId) => {
+    try {
+      await API.delete(`/tickets/${ticket.id}/comments/${commentId}`);
+      fetchComments();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete comment");
+    }
   };
 
   return (
@@ -514,45 +556,123 @@ function TicketCard({ ticket, onEdit, onDelete }) {
            <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-indigo-50 transition-colors">
               <Ticket className="w-5 h-5 text-slate-400 group-hover:text-indigo-600" />
            </div>
-           <span className={`px-3 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-widest ${urgencyColors[ticket.urgency] || urgencyColors.LOW}`}>
-              {ticket.urgency}
-           </span>
+           <div className="flex gap-2">
+             <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${statusColors[ticket.status] || "text-slate-500 bg-slate-50"}`}>
+                {(ticket.status || "OPEN").replace("_", " ")}
+             </span>
+             <span className={`px-2 py-1 rounded-lg border text-[9px] font-black uppercase tracking-widest ${priorityColors[ticket.priority] || priorityColors.LOW}`}>
+                {ticket.priority}
+             </span>
+           </div>
         </div>
 
         <div>
-          <h4 className="text-lg font-black text-slate-900 tracking-tight line-clamp-1">{ticket.title}</h4>
+          <h4 className="text-lg font-black text-slate-900 tracking-tight line-clamp-1">{ticket.title || ticket.description}</h4>
           <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mt-1">{ticket.category}</p>
         </div>
 
         <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{ticket.description}</p>
         
+        {ticket.location && (
+          <p className="text-[10px] text-slate-400"><span className="font-bold">Location:</span> {ticket.location}</p>
+        )}
+
+        {ticket.rejectionReason && (
+          <div className="p-3 bg-rose-50 rounded-xl border border-rose-100">
+            <p className="text-[10px] font-bold text-rose-600">Rejection Reason: {ticket.rejectionReason}</p>
+          </div>
+        )}
+
+        {ticket.resolutionNotes && (
+          <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+            <p className="text-[10px] font-bold text-emerald-600">Resolution: {ticket.resolutionNotes}</p>
+          </div>
+        )}
+
         <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-           <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 font-bold text-[10px] uppercase">
-                 {ticket.user?.name?.charAt(0) || "U"}
-              </div>
-              <span className="text-[10px] font-bold text-slate-500">{ticket.user?.name || "Reporter"}</span>
-           </div>
            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">ID: T-{100 + ticket.id}</span>
+           <button onClick={onToggleComments} className="flex items-center gap-1 text-[10px] font-bold text-indigo-500 hover:text-indigo-700">
+             <MessageSquare size={12} />
+             Comments
+           </button>
         </div>
       </div>
 
-      <div className="flex gap-2 mt-6 pt-4 border-t border-slate-50">
-        <button 
-          onClick={() => onEdit(ticket)}
-          className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-lg transition"
-        >
-          <Edit2 size={14} />
-          Edit
-        </button>
-        <button 
-          onClick={() => onDelete(ticket.id)}
-          className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-black uppercase tracking-widest rounded-lg transition"
-        >
-          <Trash2 size={14} />
-          Delete
-        </button>
-      </div>
+      {/* Comments Section */}
+      {expanded && (
+        <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
+          {loadingComments ? (
+            <p className="text-xs text-slate-400">Loading comments...</p>
+          ) : (
+            <>
+              {comments.map(c => (
+                <div key={c.id} className="p-3 bg-slate-50 rounded-xl">
+                  {editingCommentId === c.id ? (
+                    <div className="space-y-2">
+                      <textarea value={editCommentText} onChange={e => setEditCommentText(e.target.value)} className="w-full p-2 text-xs rounded-lg border border-slate-200 outline-none focus:border-indigo-500" />
+                      <div className="flex gap-2">
+                        <button onClick={() => saveEditComment(c.id)} className="text-[10px] font-bold text-indigo-600 hover:underline">Save</button>
+                        <button onClick={() => setEditingCommentId(null)} className="text-[10px] font-bold text-slate-400 hover:underline">Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-start">
+                        <p className="text-[10px] font-bold text-indigo-600">{c.userName}</p>
+                        <div className="flex gap-1">
+                          {currentUser?.id === c.userId && (
+                            <button onClick={() => { setEditingCommentId(c.id); setEditCommentText(c.content); }} className="p-1 hover:bg-white rounded">
+                              <Edit2 size={10} className="text-slate-400" />
+                            </button>
+                          )}
+                          {(currentUser?.id === c.userId || currentUser?.role === "ROLE_ADMIN") && (
+                            <button onClick={() => deleteComment(c.id)} className="p-1 hover:bg-white rounded">
+                              <Trash2 size={10} className="text-rose-400" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-600 mt-1">{c.content}</p>
+                      <p className="text-[9px] text-slate-300 mt-1">{new Date(c.createdAt).toLocaleString()}</p>
+                    </>
+                  )}
+                </div>
+              ))}
+              <div className="flex gap-2">
+                <input 
+                  value={newComment} 
+                  onChange={e => setNewComment(e.target.value)} 
+                  placeholder="Add a comment..." 
+                  className="flex-1 p-2 text-xs rounded-lg border border-slate-200 outline-none focus:border-indigo-400"
+                  onKeyDown={e => e.key === "Enter" && addComment()}
+                />
+                <button onClick={addComment} className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-[10px] font-bold hover:bg-indigo-700 transition">
+                  <Send size={12} />
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {ticket.status === "OPEN" && (
+        <div className="flex gap-2 mt-6 pt-4 border-t border-slate-50">
+          <button 
+            onClick={() => onEdit(ticket)}
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-lg transition"
+          >
+            <Edit2 size={14} />
+            Edit
+          </button>
+          <button 
+            onClick={() => onDelete(ticket.id)}
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-black uppercase tracking-widest rounded-lg transition"
+          >
+            <Trash2 size={14} />
+            Delete
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import API from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
-import { AlertCircle, CheckCircle2, Clock, Search, Ticket } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, Search, Ticket, Send, MessageSquare, Edit2, Trash2 } from "lucide-react";
 import { getApiErrorMessage } from "../utils/authApi";
 
 function TechnicianTicketPage() {
@@ -11,6 +11,12 @@ function TechnicianTicketPage() {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
+  const [resolutionModal, setResolutionModal] = useState({ open: false, ticketId: null, notes: "" });
+  const [expandedComments, setExpandedComments] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editCommentText, setEditCommentText] = useState("");
 
   useEffect(() => {
     fetchTickets();
@@ -20,12 +26,8 @@ function TechnicianTicketPage() {
     try {
       setLoading(true);
       setError("");
-      const response = await API.get("/api/tickets");
-      // Filter tickets assigned to the current technician
-      const assignedToMe = response.data.filter(
-        (ticket) => ticket.assignedTo === user?.id
-      );
-      setTickets(assignedToMe);
+      const response = await API.get("/tickets/assigned");
+      setTickets(response.data);
     } catch (err) {
       setError(getApiErrorMessage(err) || "Failed to fetch tickets");
     } finally {
@@ -33,23 +35,91 @@ function TechnicianTicketPage() {
     }
   };
 
-  const updateTicketStatus = async (ticketId, newStatus) => {
+  const handleStatusChange = (ticketId, newStatus) => {
+    if (newStatus === "RESOLVED") {
+      setResolutionModal({ open: true, ticketId, notes: "" });
+    } else {
+      alert("You can only change status to RESOLVED.");
+    }
+  };
+
+  const submitResolution = async () => {
+    if (!resolutionModal.notes.trim()) {
+      alert("Resolution notes are required.");
+      return;
+    }
     try {
-      await API.put(`/api/tickets/${ticketId}`, { status: newStatus });
-      setTickets((prevTickets) =>
-        prevTickets.map((ticket) =>
-          ticket.id === ticketId ? { ...ticket, status: newStatus } : ticket
+      await API.put(`/tickets/${resolutionModal.ticketId}/status`, {
+        status: "RESOLVED",
+        resolutionNotes: resolutionModal.notes
+      });
+      setTickets((prev) =>
+        prev.map((t) =>
+          t.id === resolutionModal.ticketId
+            ? { ...t, status: "RESOLVED", resolutionNotes: resolutionModal.notes }
+            : t
         )
       );
+      setResolutionModal({ open: false, ticketId: null, notes: "" });
     } catch (err) {
-      alert(getApiErrorMessage(err) || "Failed to update ticket status");
+      alert(err.response?.data?.message || "Failed to update status");
+    }
+  };
+
+  // Comments
+  const fetchComments = async (ticketId) => {
+    try {
+      const res = await API.get(`/tickets/${ticketId}/comments`);
+      setComments(res.data);
+    } catch (err) {
+      console.error("Failed to load comments", err);
+    }
+  };
+
+  const toggleComments = (ticketId) => {
+    if (expandedComments === ticketId) {
+      setExpandedComments(null);
+    } else {
+      setExpandedComments(ticketId);
+      fetchComments(ticketId);
+    }
+  };
+
+  const addComment = async (ticketId) => {
+    if (!newComment.trim()) return;
+    try {
+      await API.post(`/tickets/${ticketId}/comments`, { content: newComment });
+      setNewComment("");
+      fetchComments(ticketId);
+    } catch (err) {
+      alert("Failed to add comment");
+    }
+  };
+
+  const saveEditComment = async (ticketId, commentId) => {
+    try {
+      await API.put(`/tickets/${ticketId}/comments/${commentId}`, { content: editCommentText });
+      setEditingCommentId(null);
+      fetchComments(ticketId);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to edit comment");
+    }
+  };
+
+  const deleteComment = async (ticketId, commentId) => {
+    try {
+      await API.delete(`/tickets/${ticketId}/comments/${commentId}`);
+      fetchComments(ticketId);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete comment");
     }
   };
 
   const filteredTickets = tickets.filter((ticket) => {
     const matchesSearch =
-      ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.category.toLowerCase().includes(searchTerm.toLowerCase());
+      (ticket.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ticket.description || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ticket.category || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       filterStatus === "ALL" || ticket.status === filterStatus;
     return matchesSearch && matchesStatus;
@@ -57,27 +127,21 @@ function TechnicianTicketPage() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "RESOLVED":
-        return "bg-green-50 text-green-700 border-green-200";
-      case "IN_PROGRESS":
-        return "bg-blue-50 text-blue-700 border-blue-200";
-      case "PENDING":
-        return "bg-yellow-50 text-yellow-700 border-yellow-200";
-      default:
-        return "bg-gray-50 text-gray-700 border-gray-200";
+      case "RESOLVED": return "bg-green-50 text-green-700 border-green-200";
+      case "IN_PROGRESS": return "bg-blue-50 text-blue-700 border-blue-200";
+      case "OPEN": return "bg-yellow-50 text-yellow-700 border-yellow-200";
+      case "CLOSED": return "bg-slate-100 text-slate-600 border-slate-200";
+      case "REJECTED": return "bg-rose-50 text-rose-700 border-rose-200";
+      default: return "bg-gray-50 text-gray-700 border-gray-200";
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case "RESOLVED":
-        return <CheckCircle2 size={18} />;
-      case "IN_PROGRESS":
-        return <Clock size={18} />;
-      case "PENDING":
-        return <AlertCircle size={18} />;
-      default:
-        return null;
+      case "RESOLVED": return <CheckCircle2 size={18} />;
+      case "IN_PROGRESS": return <Clock size={18} />;
+      case "OPEN": return <AlertCircle size={18} />;
+      default: return null;
     }
   };
 
@@ -118,7 +182,7 @@ function TechnicianTicketPage() {
             <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by title or category..."
+              placeholder="Search by title, description or category..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
@@ -130,7 +194,6 @@ function TechnicianTicketPage() {
             className="px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
           >
             <option value="ALL">All Status</option>
-            <option value="PENDING">Pending</option>
             <option value="IN_PROGRESS">In Progress</option>
             <option value="RESOLVED">Resolved</option>
           </select>
@@ -153,77 +216,174 @@ function TechnicianTicketPage() {
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Ticket
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Priority
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Reported By
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
-                    Action
-                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Ticket</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Priority</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Location</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {filteredTickets.map((ticket) => (
-                  <tr key={ticket.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="font-semibold text-slate-900">{ticket.title}</p>
-                        <p className="text-xs text-slate-500 mt-1">{ticket.id}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-medium text-slate-700">
-                        {ticket.category}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div
-                        className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-semibold ${getStatusColor(
-                          ticket.status
-                        )}`}
-                      >
-                        {getStatusIcon(ticket.status)}
-                        {ticket.status.replace("_", " ")}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-medium text-slate-700">
-                        {ticket.priority || "N/A"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-slate-600">
-                        {ticket.createdBy?.name || "Unknown"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <select
-                        value={ticket.status}
-                        onChange={(e) =>
-                          updateTicketStatus(ticket.id, e.target.value)
-                        }
-                        className="px-3 py-1 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none cursor-pointer"
-                      >
-                        <option value="PENDING">Pending</option>
-                        <option value="IN_PROGRESS">In Progress</option>
-                        <option value="RESOLVED">Resolved</option>
-                      </select>
-                    </td>
-                  </tr>
+                  <React.Fragment key={ticket.id}>
+                    <tr className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="font-semibold text-slate-900">{ticket.title || ticket.description}</p>
+                          <p className="text-xs text-slate-500 mt-1 line-clamp-1">{ticket.description}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-slate-700">{ticket.category}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-semibold ${getStatusColor(ticket.status)}`}>
+                          {getStatusIcon(ticket.status)}
+                          {(ticket.status || "").replace("_", " ")}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`text-xs font-bold px-2 py-1 rounded-lg ${
+                          ticket.priority === "URGENT" ? "bg-red-50 text-red-700" :
+                          ticket.priority === "HIGH" ? "bg-rose-50 text-rose-600" :
+                          ticket.priority === "MEDIUM" ? "bg-amber-50 text-amber-600" :
+                          "bg-emerald-50 text-emerald-600"
+                        }`}>
+                          {ticket.priority || "N/A"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-slate-600">{ticket.location || "N/A"}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          {ticket.status === "IN_PROGRESS" && (
+                            <button
+                              onClick={() => handleStatusChange(ticket.id, "RESOLVED")}
+                              className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition flex items-center gap-1"
+                            >
+                              <CheckCircle2 size={14} />
+                              Resolve
+                            </button>
+                          )}
+                          {ticket.status === "RESOLVED" && (
+                            <span className="text-xs text-emerald-600 font-medium">✓ Resolved</span>
+                          )}
+                          <button
+                            onClick={() => toggleComments(ticket.id)}
+                            className="px-2 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition"
+                          >
+                            <MessageSquare size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Resolution Notes Display */}
+                    {ticket.resolutionNotes && (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-2 bg-emerald-50/50">
+                          <p className="text-xs"><span className="font-bold text-emerald-700">Resolution Notes:</span> <span className="text-slate-600">{ticket.resolutionNotes}</span></p>
+                        </td>
+                      </tr>
+                    )}
+
+                    {/* Comments Section */}
+                    {expandedComments === ticket.id && (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-4 bg-slate-50/50">
+                          <div className="max-w-2xl space-y-3">
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Comments</p>
+                            {comments.map(c => (
+                              <div key={c.id} className="p-3 bg-white rounded-xl border border-slate-100">
+                                {editingCommentId === c.id ? (
+                                  <div className="space-y-2">
+                                    <textarea value={editCommentText} onChange={e => setEditCommentText(e.target.value)} className="w-full p-2 text-xs rounded-lg border border-slate-200 outline-none focus:border-indigo-500" />
+                                    <div className="flex gap-2">
+                                      <button onClick={() => saveEditComment(ticket.id, c.id)} className="text-[10px] font-bold text-indigo-600 hover:underline">Save</button>
+                                      <button onClick={() => setEditingCommentId(null)} className="text-[10px] font-bold text-slate-400 hover:underline">Cancel</button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div className="flex justify-between items-start">
+                                      <p className="text-[10px] font-bold text-indigo-600">{c.userName}</p>
+                                      <div className="flex gap-1">
+                                        {user?.id === c.userId && (
+                                          <button onClick={() => { setEditingCommentId(c.id); setEditCommentText(c.content); }} className="p-1 hover:bg-slate-50 rounded">
+                                            <Edit2 size={10} className="text-slate-400" />
+                                          </button>
+                                        )}
+                                        {(user?.id === c.userId || user?.role === "ROLE_ADMIN") && (
+                                          <button onClick={() => deleteComment(ticket.id, c.id)} className="p-1 hover:bg-slate-50 rounded">
+                                            <Trash2 size={10} className="text-rose-400" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <p className="text-xs text-slate-600 mt-1">{c.content}</p>
+                                    <p className="text-[9px] text-slate-300 mt-1">{new Date(c.createdAt).toLocaleString()}</p>
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                            <div className="flex gap-2">
+                              <input
+                                value={newComment}
+                                onChange={e => setNewComment(e.target.value)}
+                                placeholder="Add a comment..."
+                                className="flex-1 p-2 text-xs rounded-lg border border-slate-200 outline-none focus:border-indigo-400"
+                                onKeyDown={e => e.key === "Enter" && addComment(ticket.id)}
+                              />
+                              <button onClick={() => addComment(ticket.id)} className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-[10px] font-bold hover:bg-indigo-700 transition">
+                                <Send size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Resolution Notes Modal */}
+      {resolutionModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-8 space-y-6">
+            <div className="text-center">
+              <div className="p-4 bg-emerald-50 rounded-full inline-block mb-4">
+                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+              </div>
+              <h2 className="text-xl font-black text-slate-900">Resolve Ticket</h2>
+              <p className="text-sm text-slate-500 mt-1">Please provide resolution details</p>
+            </div>
+            <textarea
+              value={resolutionModal.notes}
+              onChange={(e) => setResolutionModal({ ...resolutionModal, notes: e.target.value })}
+              placeholder="Describe how the issue was resolved (required)..."
+              className="w-full p-4 border border-slate-200 rounded-2xl text-sm outline-none focus:border-emerald-400 min-h-[120px] resize-none"
+              required
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setResolutionModal({ open: false, ticketId: null, notes: "" })}
+                className="flex-1 py-3 bg-slate-100 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitResolution}
+                className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition"
+              >
+                Mark Resolved
+              </button>
+            </div>
           </div>
         </div>
       )}
