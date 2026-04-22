@@ -145,12 +145,27 @@ public class BookingController {
         return bookingRepository.save(booking);
     }
     @DeleteMapping("/{id}")
-    public org.springframework.http.ResponseEntity<?> deleteBooking(@PathVariable Long id) {
-        return bookingRepository.findById(id)
-            .map(booking -> {
-                bookingRepository.delete(booking);
-                return org.springframework.http.ResponseEntity.ok().build();
-            })
-            .orElse(org.springframework.http.ResponseEntity.notFound().build());
+    public org.springframework.http.ResponseEntity<?> deleteBooking(@PathVariable Long id, Authentication authentication) {
+        if (authentication == null) {
+            return org.springframework.http.ResponseEntity.status(401).body("Not authenticated");
+        }
+
+        Booking booking = bookingRepository.findById(id)
+                .orElse(null);
+        
+        if (booking == null) {
+            return org.springframework.http.ResponseEntity.notFound().build();
+        }
+
+        String email = authentication.getName();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin && !booking.getUser().getEmail().equals(email)) {
+            return org.springframework.http.ResponseEntity.status(403).body("Not authorized to delete this booking");
+        }
+
+        bookingRepository.delete(booking);
+        return org.springframework.http.ResponseEntity.ok().build();
     }
 }

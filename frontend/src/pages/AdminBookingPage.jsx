@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import { 
   CheckCircle, 
@@ -25,6 +26,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 function AdminBookingPage() {
   const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [resources, setResources] = useState([]);
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -192,8 +194,12 @@ function AdminBookingPage() {
           </p>
         </div>
         <div className="flex gap-3">
-           <button className="bg-slate-900 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 hover:bg-slate-800 transition">
-             Admin Control
+           <button 
+             onClick={() => navigate("/booking-analysis")}
+             className="bg-slate-900 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 hover:bg-slate-800 transition"
+           >
+             <BarChart3 className="w-4 h-4" />
+             Booking Analysis
            </button>
            <div className="relative">
              <div className="bg-white p-2 rounded-full shadow-sm border border-slate-100 cursor-pointer">

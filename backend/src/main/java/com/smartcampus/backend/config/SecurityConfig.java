@@ -76,7 +76,7 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.PUT, "/api/bookings/*/approve").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/bookings/*/reject").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/bookings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/bookings/**").authenticated()
                         .requestMatchers("/api/bookings/**").hasAnyRole("USER", "ADMIN", "STUDENT", "STAFF", "TECHNICIAN")
 
                         // Ticket Comments (must come before general ticket matchers)

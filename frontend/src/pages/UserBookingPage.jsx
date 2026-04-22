@@ -20,6 +20,7 @@ function UserBookingPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingBookingId, setEditingBookingId] = useState(null);
 
   const [form, setForm] = useState({
     resourceId: "",
@@ -92,8 +93,13 @@ function UserBookingPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await API.post("/bookings", form);
+      if (editingBookingId) {
+        await API.put(`/bookings/${editingBookingId}`, form);
+      } else {
+        await API.post("/bookings", form);
+      }
       setIsModalOpen(false);
+      setEditingBookingId(null);
       setForm({
         resourceId: "",
         date: "",
@@ -107,19 +113,52 @@ function UserBookingPage() {
         floor: ""
       });
       fetchBookings();
-      alert("Booking request submitted!");
+      alert(editingBookingId ? "Booking updated!" : "Booking request submitted!");
     } catch (err) {
-      alert("Booking failed: " + (err.response?.data?.message || err.response?.data || err.message));
+      alert("Action failed: " + (err.response?.data?.message || err.response?.data || err.message));
     }
   };
 
+  const openModal = (booking = null) => {
+    if (booking) {
+      setEditingBookingId(booking.id);
+      setForm({
+        resourceId: booking.resourceId || "",
+        date: booking.date || "",
+        startTime: booking.startTime || "",
+        endTime: booking.endTime || "",
+        purpose: booking.purpose || "",
+        attendees: booking.attendees || "1",
+        campus: booking.campus || "Malabe Campus",
+        category: booking.category || "Lecture Hall",
+        building: booking.building || "",
+        floor: booking.floor || ""
+      });
+    } else {
+      setEditingBookingId(null);
+      setForm({
+        resourceId: "",
+        date: "",
+        startTime: "",
+        endTime: "",
+        purpose: "",
+        attendees: "1",
+        campus: "Malabe Campus",
+        category: "Lecture Hall",
+        building: "",
+        floor: ""
+      });
+    }
+    setIsModalOpen(true);
+  };
+
   const cancelBooking = async (id) => {
-    if (!window.confirm("Cancel this booking request?")) return;
+    if (!window.confirm("Permanently remove this booking request?")) return;
     try {
-      await API.put(`/bookings/${id}/cancel`);
+      await API.delete(`/bookings/${id}`);
       fetchBookings();
     } catch (err) {
-      alert("Cancel failed");
+      alert("Removal failed");
     }
   };
 
@@ -142,7 +181,7 @@ function UserBookingPage() {
           </div>
         </div>
         <button 
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => openModal()}
           className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold text-sm flex items-center gap-3 hover:bg-indigo-700 transition-all hover:scale-[1.02] shadow-xl shadow-indigo-100 active:scale-95"
         >
           <Plus className="w-5 h-5" />
@@ -210,6 +249,7 @@ function UserBookingPage() {
                   category={getResourceCategory(b.resourceId)}
                   typeConfigs={typeConfigs}
                   onCancel={() => cancelBooking(b.id)} 
+                  onEdit={() => openModal(b)}
                 />
               ))}
             </div>
@@ -223,8 +263,12 @@ function UserBookingPage() {
           <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-white/80">
               <div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Request a Facility</h2>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Fill in the details below</p>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                  {editingBookingId ? "Edit Booking" : "Request a Facility"}
+                </h2>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
+                  {editingBookingId ? "Update your booking details" : "Fill in the details below"}
+                </p>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
@@ -326,7 +370,7 @@ function UserBookingPage() {
                   type="submit"
                   className="flex-[2] bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition active:scale-95"
                 >
-                  Submit Request
+                  {editingBookingId ? "Save Changes" : "Submit Request"}
                 </button>
               </div>
             </form>
@@ -337,7 +381,7 @@ function UserBookingPage() {
   );
 }
 
-function BookingCard({ booking, resourceName, category, typeConfigs, onCancel }) {
+function BookingCard({ booking, resourceName, category, typeConfigs, onCancel, onEdit }) {
   const statusColors = {
     PENDING: "text-amber-500",
     APPROVED: "text-emerald-500",
@@ -385,12 +429,20 @@ function BookingCard({ booking, resourceName, category, typeConfigs, onCancel })
       </div>
 
       {booking.status === "PENDING" && (
-        <button 
-          onClick={onCancel}
-          className="mt-6 w-full py-3 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition shadow-sm shadow-rose-100"
-        >
-          Cancel Request
-        </button>
+        <div className="mt-6 flex gap-3">
+          <button 
+            onClick={onEdit}
+            className="flex-1 py-3 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition shadow-sm shadow-indigo-100"
+          >
+            Edit
+          </button>
+          <button 
+            onClick={onCancel}
+            className="flex-1 py-3 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition shadow-sm shadow-rose-100"
+          >
+            Cancel
+          </button>
+        </div>
       )}
     </div>
   );

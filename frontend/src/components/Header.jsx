@@ -1,11 +1,48 @@
 import React from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { Bell, Search } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 function Header() {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    const updateCount = () => {
+      const raw = localStorage.getItem("unisync_notifications_v1");
+      if (raw) {
+        try {
+          const items = JSON.parse(raw);
+          if (Array.isArray(items)) {
+            setUnreadCount(items.filter(n => !n.read).length);
+          }
+        } catch (e) {
+          console.error("Failed to parse notifications", e);
+        }
+      }
+    };
+
+    updateCount();
+    window.addEventListener("storage", updateCount);
+    const interval = setInterval(updateCount, 3000); // Poll since storage event only fires across tabs
+
+    return () => {
+      window.removeEventListener("storage", updateCount);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      // For now, let's just alert or navigate to a search page if it existed
+      console.log("Searching for:", searchTerm);
+    }
+  };
 
   // Map path to Page Title
   const getPageTitle = () => {
@@ -27,15 +64,28 @@ function Header() {
 
       <div className="flex items-center gap-8">
         {/* Search placeholder */}
-        <div className="hidden md:flex items-center gap-3 text-slate-300">
-           <Search size={18} />
-           <span className="text-xs font-bold uppercase tracking-widest">Search anything...</span>
-        </div>
+        <form onSubmit={handleSearch} className="hidden md:flex items-center gap-3 text-slate-300 bg-slate-50/50 px-4 py-2 rounded-xl border border-transparent focus-within:border-indigo-100 focus-within:bg-white transition-all">
+           <Search size={18} className="text-slate-400" />
+           <input 
+             type="text"
+             placeholder="Search anything..."
+             value={searchTerm}
+             onChange={(e) => setSearchTerm(e.target.value)}
+             className="bg-transparent border-none outline-none text-xs font-bold uppercase tracking-widest text-slate-600 placeholder:text-slate-300 w-48"
+           />
+        </form>
 
         <div className="flex items-center gap-6">
-          <button className="relative p-2 text-slate-400 hover:text-indigo-600 transition">
+          <button 
+            onClick={() => navigate("/notifications")}
+            className="relative p-2 text-slate-400 hover:text-indigo-600 transition"
+          >
             <Bell size={20} />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 bg-rose-500 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
+                {unreadCount}
+              </span>
+            )}
           </button>
           
           <div className="flex items-center gap-3">
