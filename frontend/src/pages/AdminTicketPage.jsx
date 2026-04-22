@@ -243,7 +243,7 @@ function AdminTicketPage() {
                             <div className="relative min-w-[200px]">
                               <UserCog className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                               <select
-                                disabled={assigning || technicians.length === 0 || ticket.status === "CLOSED" || ticket.status === "REJECTED"}
+                                disabled={assigning || technicians.length === 0 || ticket.status === "CLOSED" || ticket.status === "REJECTED" || ticket.status === "RESOLVED"}
                                 defaultValue=""
                                 onChange={(e) => {
                                   assignTechnician(ticket.id, e.target.value);
@@ -265,7 +265,7 @@ function AdminTicketPage() {
                         </td>
                         <td className="px-4 py-4">
                           <div className="flex gap-1">
-                            {ticket.status !== "REJECTED" && ticket.status !== "CLOSED" && (
+                            {ticket.status !== "REJECTED" && ticket.status !== "CLOSED" && ticket.status !== "RESOLVED" && (
                               <button
                                 onClick={() => setRejectModal({ open: true, ticketId: ticket.id, reason: "" })}
                                 className="px-2 py-1 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-bold hover:bg-rose-100 transition"

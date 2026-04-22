@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import API from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
-import { AlertCircle, CheckCircle2, Clock, Search, Ticket, Send, MessageSquare, Edit2, Trash2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, Search, Ticket, Send, MessageSquare, Edit2, Trash2, Image } from "lucide-react";
 import { getApiErrorMessage } from "../utils/authApi";
 
 function TechnicianTicketPage() {
@@ -17,6 +17,10 @@ function TechnicianTicketPage() {
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editCommentText, setEditCommentText] = useState("");
+  const [viewingImages, setViewingImages] = useState(null);
+  const [selectedImageIdx, setSelectedImageIdx] = useState(0);
+
+  const backendUrl = (process.env.REACT_APP_API_BASE_URL || "http://localhost:8080/api").replace(/\/api$/, "");
 
   useEffect(() => {
     fetchTickets();
@@ -27,7 +31,7 @@ function TechnicianTicketPage() {
       setLoading(true);
       setError("");
       const response = await API.get("/tickets/assigned");
-      setTickets(response.data);
+      setTickets(response.data.filter(t => t.status !== "CLOSED"));
     } catch (err) {
       setError(getApiErrorMessage(err) || "Failed to fetch tickets");
     } finally {
@@ -273,12 +277,26 @@ function TechnicianTicketPage() {
                           <button
                             onClick={() => toggleComments(ticket.id)}
                             className="px-2 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition"
+                            title="Comments"
                           >
                             <MessageSquare size={14} />
                           </button>
+                          {ticket.imageUrls && ticket.imageUrls.length > 0 && (
+                            <button
+                              onClick={() => { setViewingImages(ticket.imageUrls); setSelectedImageIdx(0); }}
+                              className="px-2 py-1.5 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition relative"
+                              title="View Images"
+                            >
+                              <Image size={14} />
+                              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-amber-500 text-white text-[8px] font-black rounded-full flex items-center justify-center">
+                                {ticket.imageUrls.length}
+                              </span>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
+
 
                     {/* Resolution Notes Display */}
                     {ticket.resolutionNotes && (
@@ -348,6 +366,62 @@ function TechnicianTicketPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Image Gallery Modal */}
+      {viewingImages && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md"
+          onClick={() => setViewingImages(null)}
+        >
+          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-amber-50 rounded-xl">
+                  <Image size={18} className="text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">Uploaded Photos</h3>
+                  <p className="text-[10px] text-slate-400 font-bold">{selectedImageIdx + 1} of {viewingImages.length}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewingImages(null)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-4 bg-slate-50 flex items-center justify-center min-h-[400px]">
+              <img
+                src={`${backendUrl}/uploads/${viewingImages[selectedImageIdx]}`}
+                alt={`Attachment ${selectedImageIdx + 1}`}
+                className="max-w-full max-h-[400px] object-contain rounded-xl shadow-sm"
+              />
+            </div>
+
+            {viewingImages.length > 1 && (
+              <div className="p-4 border-t border-slate-100 flex gap-2 overflow-x-auto">
+                {viewingImages.map((url, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImageIdx(idx)}
+                    className={`w-16 h-16 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${
+                      idx === selectedImageIdx ? "border-amber-500 ring-2 ring-amber-200 scale-105" : "border-slate-200 hover:border-slate-300"
+                    }`}
+                  >
+                    <img
+                      src={`${backendUrl}/uploads/${url}`}
+                      alt={`Thumbnail ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

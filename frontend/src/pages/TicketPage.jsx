@@ -9,6 +9,7 @@ import {
 function TicketPage() {
   const { user } = useAuth();
   const fileInputRef = useRef(null);
+  const editFileInputRef = useRef(null);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -20,6 +21,11 @@ function TicketPage() {
   const [editingTicket, setEditingTicket] = useState(null);
   const [deletingTicketId, setDeletingTicketId] = useState(null);
   const [expandedTicketId, setExpandedTicketId] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
+  const [editImages, setEditImages] = useState([]);
+  const [existingEditImages, setExistingEditImages] = useState([]);
+
+  const backendUrl = (process.env.REACT_APP_API_BASE_URL || "http://localhost:8080/api").replace(/\/api$/, "");
 
   const [form, setForm] = useState({
     title: "",
@@ -68,6 +74,8 @@ function TicketPage() {
       location: ticket.location || "",
       contact: ticket.contact || ""
     });
+    setExistingEditImages(ticket.imageUrls || []);
+    setEditImages([]);
     setIsEditModalOpen(true);
   };
 
@@ -75,12 +83,36 @@ function TicketPage() {
     e.preventDefault();
     try {
       await API.put(`/tickets/${editingTicket.id}`, editForm);
+
+      // Upload new images if any
+      if (editImages.length > 0) {
+        const formData = new FormData();
+        editImages.forEach(img => formData.append("files", img.file));
+        await API.post(`/tickets/${editingTicket.id}/upload`, formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+      }
+
       setIsEditModalOpen(false);
       setEditingTicket(null);
+      setEditImages([]);
       fetchTickets();
     } catch (err) {
       console.error("Edit error:", err);
-      alert("Failed to update ticket");
+      alert(err.response?.data?.message || "Failed to update ticket");
+    }
+  };
+
+  const handleEditFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    const validTypes = ["image/jpeg", "image/jpg", "image/png"];
+    const validFiles = files.filter(f => validTypes.includes(f.type));
+    if (validFiles.length !== files.length) {
+      alert("Only JPG, JPEG, and PNG images are allowed.");
+    }
+    if (validFiles.length > 0) {
+      const newImages = validFiles.map(file => ({ file, preview: URL.createObjectURL(file) }));
+      setEditImages(prev => [...prev, ...newImages].slice(0, 3));
     }
   };
 
@@ -118,8 +150,20 @@ function TicketPage() {
 
   const removeImage = (index) => setSelectedImages(prev => prev.filter((_, i) => i !== index));
 
+  const validateForm = () => {
+    const errors = {};
+    if (!form.title.trim()) errors.title = "Title is required";
+    else if (form.title.trim().length < 5) errors.title = "Title must be at least 5 characters";
+    if (!form.description.trim()) errors.description = "Description is required";
+    else if (form.description.trim().length < 10) errors.description = "Description must be at least 10 characters";
+    if (!form.location.trim()) errors.location = "Location is required";
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
     try {
       const res = await API.post("/tickets", form);
       const ticketId = res.data.id;
@@ -136,6 +180,7 @@ function TicketPage() {
       setIsModalOpen(false);
       setForm({ title: "", description: "", priority: "LOW", category: "Hardware", location: "", contact: "" });
       setSelectedImages([]);
+      setFormErrors({});
       fetchTickets();
     } catch (err) {
       alert(err.response?.data?.message || "Report failed");
@@ -267,7 +312,8 @@ function TicketPage() {
             <form onSubmit={handleSubmit} className="p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
               <div className="space-y-6">
                 <FormField label="Incident Title" hint={`${form.title.length}/200`}>
-                  <input name="title" value={form.title} onChange={handleChange} placeholder="e.g. Broken Lighting in Hallway B" className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" required maxLength={200} />
+                  <input name="title" value={form.title} onChange={(e) => { handleChange(e); setFormErrors(prev => ({...prev, title: ""})); }} placeholder="e.g. Broken Lighting in Hallway B" className={`w-full bg-slate-50 border rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition ${formErrors.title ? "border-rose-400" : "border-slate-100"}`} maxLength={200} />
+                   {formErrors.title && <p className="text-[10px] font-bold text-rose-500 mt-1 px-1">{formErrors.title}</p>}
                 </FormField>
 
                 <div className="grid grid-cols-2 gap-6">
@@ -292,7 +338,8 @@ function TicketPage() {
 
                 <div className="grid grid-cols-2 gap-6">
                   <FormField label="Facility / Location">
-                    <input name="location" value={form.location} onChange={handleChange} placeholder="e.g. Block C - 302" className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" required />
+                    <input name="location" value={form.location} onChange={(e) => { handleChange(e); setFormErrors(prev => ({...prev, location: ""})); }} placeholder="e.g. Block C - 302" className={`w-full bg-slate-50 border rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition ${formErrors.location ? "border-rose-400" : "border-slate-100"}`} />
+                     {formErrors.location && <p className="text-[10px] font-bold text-rose-500 mt-1 px-1">{formErrors.location}</p>}
                   </FormField>
                   <FormField label="Preferred Contact">
                     <input name="contact" value={form.contact} onChange={handleChange} placeholder="e.g. +94 77..." className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" />
@@ -341,7 +388,8 @@ function TicketPage() {
                 </FormField>
 
                 <FormField label="Incident Description" hint="Required">
-                   <textarea name="description" value={form.description} onChange={handleChange} placeholder="Provide technical details about the issue..." className="w-full bg-slate-50 border border-slate-100 rounded-[24px] p-6 text-xs font-bold outline-none focus:border-indigo-500 transition min-h-[120px] resize-none" required />
+                   <textarea name="description" value={form.description} onChange={(e) => { handleChange(e); setFormErrors(prev => ({...prev, description: ""})); }} placeholder="Provide technical details about the issue..." className={`w-full bg-slate-50 border rounded-[24px] p-6 text-xs font-bold outline-none focus:border-indigo-500 transition min-h-[120px] resize-none ${formErrors.description ? "border-rose-400" : "border-slate-100"}`} />
+                   {formErrors.description && <p className="text-[10px] font-bold text-rose-500 mt-1 px-1">{formErrors.description}</p>}
                 </FormField>
               </div>
 
@@ -405,6 +453,62 @@ function TicketPage() {
                     <input name="contact" value={editForm.contact} onChange={handleEditChange} placeholder="e.g. +94 77..." className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:border-indigo-500 transition" />
                   </FormField>
                 </div>
+
+                <FormField label="Visual Evidence" hint={`${editImages.length}/3 new images`} hintColor={editImages.length >= 3 ? "text-rose-500" : "text-slate-300"}>
+                   <input type="file" ref={editFileInputRef} onChange={handleEditFileChange} multiple accept=".jpg,.jpeg,.png" className="hidden" />
+
+                   {/* Existing images */}
+                   {existingEditImages.length > 0 && (
+                     <div className="mb-3">
+                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Current Images</p>
+                       <div className="grid grid-cols-3 gap-3">
+                         {existingEditImages.map((url, idx) => (
+                           <div key={idx} className="relative aspect-video rounded-2xl overflow-hidden border border-slate-100">
+                             <img src={`${backendUrl}/uploads/${url}`} alt={`Existing ${idx + 1}`} className="w-full h-full object-cover" />
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   )}
+
+                   {/* New images to upload */}
+                   {editImages.length > 0 ? (
+                     <div className="grid grid-cols-3 gap-4">
+                       {editImages.map((img, idx) => (
+                         <div key={idx} className="relative aspect-video rounded-2xl overflow-hidden group border border-slate-100">
+                           <img src={img.preview} alt="Upload" className="w-full h-full object-cover" />
+                           <button
+                             type="button"
+                             onClick={() => setEditImages(prev => prev.filter((_, i) => i !== idx))}
+                             className="absolute top-2 right-2 p-1 bg-white/80 backdrop-blur-sm rounded-full text-rose-500 opacity-0 group-hover:opacity-100 transition shadow-sm"
+                           >
+                             <X size={14} />
+                           </button>
+                         </div>
+                       ))}
+                       {editImages.length < 3 && (
+                         <button
+                           type="button"
+                           onClick={() => editFileInputRef.current?.click()}
+                           className="aspect-video rounded-2xl border-2 border-dashed border-slate-100 flex flex-col items-center justify-center gap-2 bg-slate-50/30 hover:bg-slate-50 transition"
+                         >
+                           <Plus className="w-5 h-5 text-slate-300" />
+                           <span className="text-[10px] font-black text-slate-400 uppercase">Add More</span>
+                         </button>
+                       )}
+                     </div>
+                   ) : (
+                     <div onClick={() => editFileInputRef.current?.click()} className="w-full border-2 border-dashed border-slate-100 rounded-[32px] p-6 flex flex-col items-center justify-center gap-3 bg-slate-50/30 hover:bg-slate-50 transition cursor-pointer group">
+                       <div className="p-3 bg-white rounded-2xl shadow-sm text-slate-300 group-hover:text-indigo-500 transition-all">
+                         <Upload size={20} />
+                       </div>
+                       <div className="text-center">
+                         <p className="text-xs font-black text-slate-900 tracking-tight">Upload new photos</p>
+                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">JPG, JPEG OR PNG (MAX 3) — replaces existing</p>
+                       </div>
+                     </div>
+                   )}
+                </FormField>
 
                 <FormField label="Incident Description">
                    <textarea name="description" value={editForm.description} onChange={handleEditChange} placeholder="Provide details..." className="w-full bg-slate-50 border border-slate-100 rounded-[24px] p-6 text-xs font-bold outline-none focus:border-indigo-500 transition min-h-[120px] resize-none" required />

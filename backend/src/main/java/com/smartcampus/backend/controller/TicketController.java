@@ -34,7 +34,7 @@ public class TicketController {
     private static final Map<String, List<String>> VALID_TRANSITIONS = Map.of(
         "OPEN", List.of("IN_PROGRESS", "REJECTED"),
         "IN_PROGRESS", List.of("RESOLVED", "REJECTED"),
-        "RESOLVED", List.of("CLOSED", "REJECTED"),
+        "RESOLVED", List.of("CLOSED"),
         "CLOSED", List.of(),
         "REJECTED", List.of()
     );
