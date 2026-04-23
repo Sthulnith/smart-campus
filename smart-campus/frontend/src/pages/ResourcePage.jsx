@@ -81,6 +81,11 @@ function ResourcePage() {
       capacity: Number(form.capacity),
     };
 
+    if (!form.name || !form.type || !form.capacity || !form.location) {
+      toast.error("All fields are required!");
+      return;
+    }
+
     try {
       if (editingId) {
         await API.put(`/resources/${editingId}`, payload);
@@ -152,7 +157,7 @@ function ResourcePage() {
 
             <button
               type="submit"
-              className="col-span-5 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+              className="col-span-5 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
             >
               {editingId ? "Update Resource" : "Add Resource"}
             </button>
@@ -161,7 +166,7 @@ function ResourcePage() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="col-span-5 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600"
+                className="col-span-5 bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600"
               >
                 Cancel Edit
               </button>
