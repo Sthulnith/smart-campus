@@ -36,6 +36,7 @@ function TicketPage() {
     contact: ""
   });
 
+
   const [editForm, setEditForm] = useState({
     title: "",
     description: "",
@@ -78,6 +79,7 @@ function TicketPage() {
     setEditImages([]);
     setIsEditModalOpen(true);
   };
+
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
