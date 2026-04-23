@@ -102,6 +102,7 @@ function TicketPage() {
       alert(err.response?.data?.message || "Failed to update ticket");
     }
   };
+  
 
   const handleEditFileChange = (e) => {
     const files = Array.from(e.target.files);
