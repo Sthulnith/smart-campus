@@ -106,6 +106,7 @@ function TicketPage() {
   };
   
 
+
   const handleEditFileChange = (e) => {
     const files = Array.from(e.target.files);
     const validTypes = ["image/jpeg", "image/jpg", "image/png"];
@@ -151,6 +152,7 @@ function TicketPage() {
     }
   };
 
+
   const removeImage = (index) => setSelectedImages(prev => prev.filter((_, i) => i !== index));
 
   const validateForm = () => {
@@ -163,6 +165,7 @@ function TicketPage() {
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
