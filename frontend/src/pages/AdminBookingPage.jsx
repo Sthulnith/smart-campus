@@ -33,7 +33,7 @@ function AdminBookingPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+//component level state for the booking form
   const [form, setForm] = useState({
     resourceId: "",
     campus: "Malabe Campus",
@@ -69,7 +69,7 @@ function AdminBookingPage() {
       setLoading(false);
     }
   };
-
+//helper function to get resource name by id
   const getResourceName = (id) => {
     const res = resources.find(r => r.id === id);
     return res ? res.name : `Resource #${id}`;
@@ -94,7 +94,7 @@ function AdminBookingPage() {
       alert("Reject failed");
     }
   };
-
+//function to delete a booking permanently
   const deleteBooking = async (id) => {
     if (!window.confirm("Permanently delete this booking record? This cannot be undone.")) return;
     try {
