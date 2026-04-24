@@ -7,6 +7,7 @@ function ResourcePage() {
   const { isAdmin } = useAuth();
   const [resources, setResources] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [search, setSearch] = useState(""); // 🔥 NEW
   const [form, setForm] = useState({
     name: "",
     type: "",
@@ -104,9 +105,30 @@ function ResourcePage() {
     }
   };
 
+  // 🔥 FILTER LOGIC
+  const filteredResources = resources.filter((r) =>
+    r.name.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Resources</h2>
+
+      {/* HEADER + COUNT */}
+      <div>
+        <h2 className="text-2xl font-bold">Resources</h2>
+        <p className="text-sm text-gray-500">
+          Total Resources: {resources.length}
+        </p>
+      </div>
+
+      {/* 🔍 SEARCH BAR */}
+      <input
+        type="text"
+        placeholder="Search by name..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="border p-2 rounded-lg w-full"
+      />
 
       {isAdmin && (
         <div className="bg-white p-6 rounded-xl shadow-md">
@@ -188,23 +210,28 @@ function ResourcePage() {
         </div>
 
         <div className="space-y-2">
-          {resources.map((r) => (
+          {filteredResources.map((r) => (
             <div
               key={r.id}
-              className="grid grid-cols-6 gap-4 bg-gray-50 p-3 rounded-lg shadow-sm items-center"
+              className={`grid grid-cols-6 gap-4 p-3 rounded-lg shadow-sm items-center ${
+                editingId === r.id
+                  ? "bg-yellow-100" // 🔥 highlight editing row
+                  : "bg-gray-50"
+              }`}
             >
               <span>{r.name}</span>
               <span>{r.type}</span>
               <span>{r.capacity}</span>
               <span>{r.location}</span>
 
+              {/* 🔥 IMPROVED BADGE */}
               <span
-                className={`font-semibold ${
+                className={`px-2 py-1 rounded text-white text-sm ${
                   r.status === "ACTIVE"
-                    ? "text-green-600"
+                    ? "bg-green-600"
                     : r.status === "MAINTENANCE"
-                    ? "text-yellow-600"
-                    : "text-red-600"
+                    ? "bg-yellow-600"
+                    : "bg-red-600"
                 }`}
               >
                 {r.status}
