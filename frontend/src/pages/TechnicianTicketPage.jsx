@@ -6,26 +6,33 @@ import { getApiErrorMessage } from "../utils/authApi";
 
 function TechnicianTicketPage() {
   const { user } = useAuth();
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tickets, setTickets] = useState([]); // assigned tickets list
+  const [loading, setLoading] = useState(true); // loading indicator
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [resolutionModal, setResolutionModal] = useState({ open: false, ticketId: null, notes: "" });
+  
+  // Comment system states
   const [expandedComments, setExpandedComments] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editCommentText, setEditCommentText] = useState("");
+
+  // Image viewer states
   const [viewingImages, setViewingImages] = useState(null);
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
 
+  // Backend base URL configuration
   const backendUrl = (process.env.REACT_APP_API_BASE_URL || "http://localhost:8080/api").replace(/\/api$/, "");
 
+  // Load assigned tickets when page loads
   useEffect(() => {
     fetchTickets();
   }, []);
 
+  // Fetch technician assigned tickets
   const fetchTickets = async () => {
     try {
       setLoading(true);
@@ -39,6 +46,7 @@ function TechnicianTicketPage() {
     }
   };
 
+  // Allow technician to resolve ticket
   const handleStatusChange = (ticketId, newStatus) => {
     if (newStatus === "RESOLVED") {
       setResolutionModal({ open: true, ticketId, notes: "" });
@@ -47,6 +55,7 @@ function TechnicianTicketPage() {
     }
   };
 
+  // Submit resolution notes and update status
   const submitResolution = async () => {
     if (!resolutionModal.notes.trim()) {
       alert("Resolution notes are required.");
@@ -57,6 +66,7 @@ function TechnicianTicketPage() {
         status: "RESOLVED",
         resolutionNotes: resolutionModal.notes
       });
+      // Update UI instantly
       setTickets((prev) =>
         prev.map((t) =>
           t.id === resolutionModal.ticketId
@@ -80,6 +90,7 @@ function TechnicianTicketPage() {
     }
   };
 
+  // Expand or collapse comments panel
   const toggleComments = (ticketId) => {
     if (expandedComments === ticketId) {
       setExpandedComments(null);
@@ -139,6 +150,7 @@ function TechnicianTicketPage() {
       default: return "bg-gray-50 text-gray-700 border-gray-200";
     }
   };
+
 
   const getStatusIcon = (status) => {
     switch (status) {
