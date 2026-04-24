@@ -411,6 +411,7 @@ function TicketPage() {
         </div>
       )}
 
+
       {/* Edit Ticket Modal */}
       {isEditModalOpen && editingTicket && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
@@ -476,6 +477,7 @@ function TicketPage() {
                        </div>
                      </div>
                    )}
+                   
 
                    {/* New images to upload */}
                    {editImages.length > 0 ? (
