@@ -1,0 +1,2 @@
+ALTER TABLE app_users
+    ALTER COLUMN role TYPE VARCHAR(64);

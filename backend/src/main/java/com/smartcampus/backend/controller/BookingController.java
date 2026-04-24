@@ -1,24 +1,77 @@
 package com.smartcampus.backend.controller;
+<<<<<<< HEAD
 import com.smartcampus.backend.model.Booking;
 import com.smartcampus.backend.repository.BookingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+=======
+
+import com.smartcampus.backend.model.AppUser;
+import com.smartcampus.backend.model.Booking;
+import com.smartcampus.backend.repository.AppUserRepository;
+import com.smartcampus.backend.repository.BookingRepository;
+import com.smartcampus.backend.service.BookingService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+>>>>>>> fix/32-fix-main-branch
 @RestController
 @RequestMapping("/api/bookings")
 public class BookingController {
     
     @Autowired
     private BookingRepository bookingRepository;
+<<<<<<< HEAD
    
+=======
+
+    @Autowired
+    private BookingService bookingService;
+
+    @Autowired
+    private AppUserRepository userRepository;
+
+>>>>>>> fix/32-fix-main-branch
     @GetMapping
     public List<Booking> getAllBookings() {
         return bookingRepository.findAll();
     }
+<<<<<<< HEAD
     // Get booking by ID
     @PostMapping
     public Booking createBooking(@RequestBody Booking booking) {
+=======
+
+    /**
+     * Get bookings for the currently logged-in user.
+     * Replaces /bookings/user/{id}
+     */
+    @GetMapping("/user")
+    public List<Booking> getUserBookings(Authentication authentication) {
+        if (authentication == null) {
+            throw new RuntimeException("Not authenticated");
+        }
+        String email = authentication.getName();
+        return bookingService.getBookingsByUsername(email);
+    }
+
+    @PostMapping
+    public Booking createBooking(@RequestBody Booking booking, Authentication authentication) {
+        if (authentication == null) {
+            throw new RuntimeException("Not authenticated");
+        }
+        
+        String email = authentication.getName();
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        booking.setUser(user);
+>>>>>>> fix/32-fix-main-branch
 
         // Check for time conflicts
         List<Booking> conflicts = bookingRepository
@@ -36,6 +89,7 @@ public class BookingController {
         booking.setStatus("PENDING");
         return bookingRepository.save(booking);
     }
+<<<<<<< HEAD
     @PutMapping("/{id}")
 public Booking updateBooking(@PathVariable Long id, @RequestBody Booking updated) {
     Booking b = bookingRepository.findById(id)
@@ -70,4 +124,104 @@ public Booking updateBooking(@PathVariable Long id, @RequestBody Booking updated
     return bookingRepository.save(booking);
 }
 
+=======
+
+    @PutMapping("/{id}")
+    public Booking updateBooking(@PathVariable Long id, @RequestBody Booking updated) {
+        Booking b = bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        b.setResourceId(updated.getResourceId());
+        b.setDate(updated.getDate());
+        b.setEndDate(updated.getEndDate());
+        b.setStartTime(updated.getStartTime());
+        b.setEndTime(updated.getEndTime());
+        b.setPurpose(updated.getPurpose());
+        b.setAttendees(updated.getAttendees());
+        b.setCampus(updated.getCampus());
+        b.setCategory(updated.getCategory());
+        b.setFloor(updated.getFloor());
+
+        return bookingRepository.save(b);
+    }
+
+    @PutMapping("/{id}/approve")
+    public Booking approveBooking(@PathVariable Long id) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        if (booking.getStatus().equals("CANCELLED")) {
+            throw new RuntimeException("Cancelled bookings cannot be approved");
+        }
+
+        booking.setStatus("APPROVED");
+        return bookingRepository.save(booking);
+    }
+
+    @PutMapping("/{id}/cancel")
+    public Booking cancelBooking(@PathVariable Long id, Authentication authentication) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        if (authentication == null) {
+            throw new RuntimeException("Not authenticated");
+        }
+
+        String email = authentication.getName();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin && !booking.getUser().getEmail().equals(email)) {
+            throw new RuntimeException("Not authorized to cancel this booking");
+        }
+
+        if (booking.getStatus().equals("CANCELLED")) {
+            throw new RuntimeException("Booking is already cancelled");
+        }
+
+        if (booking.getStatus().equals("REJECTED")) {
+            throw new RuntimeException("Rejected booking cannot be cancelled");
+        }
+
+        booking.setStatus("CANCELLED");
+        return bookingRepository.save(booking);
+    }
+
+    @PutMapping("/{id}/reject")
+    public Booking rejectBooking(@PathVariable Long id) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        if (booking.getStatus().equals("CANCELLED")) {
+            throw new RuntimeException("Cancelled bookings cannot be rejected");
+        }
+
+        booking.setStatus("REJECTED");
+        return bookingRepository.save(booking);
+    }
+    @DeleteMapping("/{id}")
+    public org.springframework.http.ResponseEntity<?> deleteBooking(@PathVariable Long id, Authentication authentication) {
+        if (authentication == null) {
+            return org.springframework.http.ResponseEntity.status(401).body("Not authenticated");
+        }
+
+        Booking booking = bookingRepository.findById(id)
+                .orElse(null);
+        
+        if (booking == null) {
+            return org.springframework.http.ResponseEntity.notFound().build();
+        }
+
+        String email = authentication.getName();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin && !booking.getUser().getEmail().equals(email)) {
+            return org.springframework.http.ResponseEntity.status(403).body("Not authorized to delete this booking");
+        }
+
+        bookingRepository.delete(booking);
+        return org.springframework.http.ResponseEntity.ok().build();
+    }
+>>>>>>> fix/32-fix-main-branch
 }

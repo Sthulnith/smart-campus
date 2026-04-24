@@ -76,13 +76,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
-        log.warn("Runtime issue ({}): {}", ex.getClass().getSimpleName(), ex.getMessage());
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleMessageNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                 "error", "Bad Request",
-                "message", "Something went wrong. Please try again.",
-                "code", "REQUEST_FAILED",
+                "message", "Malformed JSON request or missing body.",
+                "code", "BAD_REQUEST_BODY",
+                "timestamp", Instant.now().toString()
+        ));
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
+        log.error("Internal Error ({}): {}", ex.getClass().getSimpleName(), ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "error", "Internal Server Error",
+                "message", "Something went wrong on our side. Please try again later.",
+                "code", "INTERNAL_ERROR",
                 "timestamp", Instant.now().toString()
         ));
     }

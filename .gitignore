@@ -14,7 +14,7 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -39,10 +39,16 @@ target/
 
 ### VS Code ###
 .vscode/
-.env
-.env.*
+*.swp
+*.bak
+.DS_Store
+
+### Project Specific ###
+backend/target/
+backend/.env
+backend/.env.*
+backend/node_modules/
+frontend/node_modules/
+frontend/dist/
 frontend/.env
 frontend/.env.*
-frontend/node_modules/
-backend/node_modules/
-backend/target/
