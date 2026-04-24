@@ -15,10 +15,12 @@ function AdminTicketPage() {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
 
+  // Load tickets and technicians on component mount
   useEffect(() => {
     fetchData();
   }, []);
 
+  // Fetch all tickets and available technicians
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -37,12 +39,14 @@ function AdminTicketPage() {
     }
   };
 
+  // Map technician ID to technician name for quick lookup
   const technicianNameById = useMemo(() => {
     const map = new Map();
     technicians.forEach((tech) => map.set(tech.id, tech.name));
     return map;
   }, [technicians]);
 
+  // Filter tickets based on search keyword
   const filteredTickets = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     if (!q) return tickets;
@@ -54,6 +58,7 @@ function AdminTicketPage() {
     });
   }, [tickets, searchTerm, technicianNameById]);
 
+  // Assign selected technician to a ticket
   const assignTechnician = async (ticketId, technicianId) => {
     if (!technicianId) return;
     setAssigningByTicket((prev) => ({ ...prev, [ticketId]: true }));
