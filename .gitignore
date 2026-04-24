@@ -29,9 +29,20 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+### Node ###
+node_modules/
+dist/
+
+### Java ###
+target/
+*.log
+
 ### VS Code ###
 .vscode/
 .env
 .env.*
 frontend/.env
 frontend/.env.*
+frontend/node_modules/
+backend/node_modules/
+backend/target/
