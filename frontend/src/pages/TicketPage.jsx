@@ -155,6 +155,7 @@ function TicketPage() {
 
   const removeImage = (index) => setSelectedImages(prev => prev.filter((_, i) => i !== index));
 
+  //form validation
   const validateForm = () => {
     const errors = {};
     if (!form.title.trim()) errors.title = "Title is required";
@@ -593,6 +594,7 @@ function FormField({ label, children, hint, hintColor = "text-slate-300" }) {
   );
 }
 
+
 function TicketCard({ ticket, onEdit, onDelete, expanded, onToggleComments, currentUser }) {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
@@ -614,12 +616,14 @@ function TicketCard({ ticket, onEdit, onDelete, expanded, onToggleComments, curr
     return parts.join(" ") || "< 1 min";
   };
 
+
   const priorityColors = {
     LOW: "text-emerald-500 bg-emerald-50 border-emerald-100",
     MEDIUM: "text-amber-500 bg-amber-50 border-amber-100",
     HIGH: "text-rose-500 bg-rose-50 border-rose-100",
     URGENT: "text-red-600 bg-red-50 border-red-200"
   };
+
 
   const statusColors = {
     OPEN: "text-blue-600 bg-blue-50",
@@ -666,6 +670,7 @@ function TicketCard({ ticket, onEdit, onDelete, expanded, onToggleComments, curr
     }
   };
 
+  
   const deleteComment = async (commentId) => {
     try {
       await API.delete(`/tickets/${ticket.id}/comments/${commentId}`);
