@@ -36,6 +36,7 @@ function TicketPage() {
     contact: ""
   });
 
+
   const [editForm, setEditForm] = useState({
     title: "",
     description: "",
@@ -79,6 +80,7 @@ function TicketPage() {
     setIsEditModalOpen(true);
   };
 
+
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -102,6 +104,8 @@ function TicketPage() {
       alert(err.response?.data?.message || "Failed to update ticket");
     }
   };
+  
+
 
   const handleEditFileChange = (e) => {
     const files = Array.from(e.target.files);
@@ -148,8 +152,10 @@ function TicketPage() {
     }
   };
 
+
   const removeImage = (index) => setSelectedImages(prev => prev.filter((_, i) => i !== index));
 
+  //form validation
   const validateForm = () => {
     const errors = {};
     if (!form.title.trim()) errors.title = "Title is required";
@@ -160,6 +166,7 @@ function TicketPage() {
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -405,6 +412,7 @@ function TicketPage() {
         </div>
       )}
 
+
       {/* Edit Ticket Modal */}
       {isEditModalOpen && editingTicket && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
@@ -470,6 +478,7 @@ function TicketPage() {
                        </div>
                      </div>
                    )}
+                   
 
                    {/* New images to upload */}
                    {editImages.length > 0 ? (
@@ -585,6 +594,7 @@ function FormField({ label, children, hint, hintColor = "text-slate-300" }) {
   );
 }
 
+
 function TicketCard({ ticket, onEdit, onDelete, expanded, onToggleComments, currentUser }) {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
@@ -606,12 +616,14 @@ function TicketCard({ ticket, onEdit, onDelete, expanded, onToggleComments, curr
     return parts.join(" ") || "< 1 min";
   };
 
+
   const priorityColors = {
     LOW: "text-emerald-500 bg-emerald-50 border-emerald-100",
     MEDIUM: "text-amber-500 bg-amber-50 border-amber-100",
     HIGH: "text-rose-500 bg-rose-50 border-rose-100",
     URGENT: "text-red-600 bg-red-50 border-red-200"
   };
+
 
   const statusColors = {
     OPEN: "text-blue-600 bg-blue-50",
@@ -658,6 +670,7 @@ function TicketCard({ ticket, onEdit, onDelete, expanded, onToggleComments, curr
     }
   };
 
+  
   const deleteComment = async (commentId) => {
     try {
       await API.delete(`/tickets/${ticket.id}/comments/${commentId}`);
