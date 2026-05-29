@@ -1,4 +1,6 @@
 # Root .gitignore
+.DS_Store
+**/.DS_Store
 .Rhistory
 *.log
 backend-error.txt

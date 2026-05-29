@@ -1,0 +1,398 @@
+{
+  "web": [
+    {
+      "file": "web-001.png",
+      "caption": "Email Reset Mail",
+      "source": "Project Screenshots/Web App Demo Screenshots/Sign in and Sign up CRUD/Email Reset Mail.png"
+    },
+    {
+      "file": "web-002.png",
+      "caption": "Forgot Password",
+      "source": "Project Screenshots/Web App Demo Screenshots/Sign in and Sign up CRUD/Forgot Password.png"
+    },
+    {
+      "file": "web-003.png",
+      "caption": "Password Update",
+      "source": "Project Screenshots/Web App Demo Screenshots/Sign in and Sign up CRUD/Password Update.png"
+    },
+    {
+      "file": "web-004.png",
+      "caption": "Sign in - Google Auth",
+      "source": "Project Screenshots/Web App Demo Screenshots/Sign in and Sign up CRUD/Sign in - Google Auth.png"
+    },
+    {
+      "file": "web-005.png",
+      "caption": "Sign in - normal",
+      "source": "Project Screenshots/Web App Demo Screenshots/Sign in and Sign up CRUD/Sign in - normal.png"
+    },
+    {
+      "file": "web-006.png",
+      "caption": "Sign up",
+      "source": "Project Screenshots/Web App Demo Screenshots/Sign in and Sign up CRUD/Sign up.png"
+    },
+    {
+      "file": "web-007.png",
+      "caption": "Admin dashboard",
+      "source": "Project Screenshots/Web App Demo Screenshots/Admin dashboard.png"
+    },
+    {
+      "file": "web-008.png",
+      "caption": "User Dashboard",
+      "source": "Project Screenshots/Web App Demo Screenshots/User Dashboard.png"
+    },
+    {
+      "file": "web-009.png",
+      "caption": "Facilities Create",
+      "source": "Project Screenshots/Web App Demo Screenshots/Facility CRUD/Facilities Create.png"
+    },
+    {
+      "file": "web-010.png",
+      "caption": "Facilities Delete",
+      "source": "Project Screenshots/Web App Demo Screenshots/Facility CRUD/Facilities Delete.png"
+    },
+    {
+      "file": "web-011.png",
+      "caption": "Facilities Read",
+      "source": "Project Screenshots/Web App Demo Screenshots/Facility CRUD/Facilities Read.png"
+    },
+    {
+      "file": "web-012.png",
+      "caption": "Facilities Update",
+      "source": "Project Screenshots/Web App Demo Screenshots/Facility CRUD/Facilities Update.png"
+    },
+    {
+      "file": "web-013.png",
+      "caption": "Booking Page",
+      "source": "Project Screenshots/Web App Demo Screenshots/Booking  CRUD/Booking Page.png"
+    },
+    {
+      "file": "web-014.png",
+      "caption": "Create Booking 1",
+      "source": "Project Screenshots/Web App Demo Screenshots/Booking  CRUD/Create Booking 1.png"
+    },
+    {
+      "file": "web-015.png",
+      "caption": "Create Booking 2",
+      "source": "Project Screenshots/Web App Demo Screenshots/Booking  CRUD/Create Booking 2.png"
+    },
+    {
+      "file": "web-016.png",
+      "caption": "Delete Booking",
+      "source": "Project Screenshots/Web App Demo Screenshots/Booking  CRUD/Delete Booking.png"
+    },
+    {
+      "file": "web-017.png",
+      "caption": "Read Booking",
+      "source": "Project Screenshots/Web App Demo Screenshots/Booking  CRUD/Read Booking.png"
+    },
+    {
+      "file": "web-018.png",
+      "caption": "Booking Analysis",
+      "source": "Project Screenshots/Web App Demo Screenshots/Booking Analysis/Booking Analysis.png"
+    },
+    {
+      "file": "web-019.png",
+      "caption": "Add Technician",
+      "source": "Project Screenshots/Web App Demo Screenshots/Tickect CRUD/Add Technician.png"
+    },
+    {
+      "file": "web-020.png",
+      "caption": "Create Notification",
+      "source": "Project Screenshots/Web App Demo Screenshots/Notification CRUD/Create Notification.png"
+    },
+    {
+      "file": "web-021.png",
+      "caption": "Notification Delete",
+      "source": "Project Screenshots/Web App Demo Screenshots/Notification CRUD/Notification Delete.png"
+    },
+    {
+      "file": "web-022.png",
+      "caption": "Read Notification",
+      "source": "Project Screenshots/Web App Demo Screenshots/Notification CRUD/Read Notification.png"
+    },
+    {
+      "file": "web-023.png",
+      "caption": "User Profile Read",
+      "source": "Project Screenshots/Web App Demo Screenshots/User Profile Crud/User Profile Read.png"
+    },
+    {
+      "file": "web-024.png",
+      "caption": "User Profile Update",
+      "source": "Project Screenshots/Web App Demo Screenshots/User Profile Crud/User Profile Update.png"
+    },
+    {
+      "file": "web-025.png",
+      "caption": "User Management",
+      "source": "Project Screenshots/Web App Demo Screenshots/User Role Management/User Management.png"
+    },
+    {
+      "file": "web-026.png",
+      "caption": "Screenshot 2026-04-30 at 23.41.08",
+      "source": "Project Screenshots/Web App Demo Screenshots/Screenshot 2026-04-30 at 23.41.08.png"
+    },
+    {
+      "file": "web-027.png",
+      "caption": "Screenshot 2026-04-30 at 23.42.38",
+      "source": "Project Screenshots/Web App Demo Screenshots/Screenshot 2026-04-30 at 23.42.38.png"
+    },
+    {
+      "file": "web-028.png",
+      "caption": "Screenshot 2026-04-30 at 23.43.24",
+      "source": "Project Screenshots/Web App Demo Screenshots/Screenshot 2026-04-30 at 23.43.24.png"
+    },
+    {
+      "file": "web-029.png",
+      "caption": "Screenshot 2026-04-30 at 23.43.31",
+      "source": "Project Screenshots/Web App Demo Screenshots/Screenshot 2026-04-30 at 23.43.31.png"
+    },
+    {
+      "file": "web-030.png",
+      "caption": "Screenshot 2026-04-28 at 00.29.19",
+      "source": "Project Screenshots/Web App Demo Screenshots/Tickect CRUD/Screenshot 2026-04-28 at 00.29.19.png"
+    },
+    {
+      "file": "web-031.png",
+      "caption": "Screenshot 2026-04-28 at 00.30.07",
+      "source": "Project Screenshots/Web App Demo Screenshots/Tickect CRUD/Screenshot 2026-04-28 at 00.30.07.png"
+    },
+    {
+      "file": "web-032.png",
+      "caption": "Tickect Create 1",
+      "source": "Project Screenshots/Web App Demo Screenshots/Tickect CRUD/Tickect Create 1.png"
+    },
+    {
+      "file": "web-033.png",
+      "caption": "Tickect Create 2",
+      "source": "Project Screenshots/Web App Demo Screenshots/Tickect CRUD/Tickect Create 2.png"
+    }
+  ],
+  "database": [
+    {
+      "file": "db-001.png",
+      "caption": "Check user notification preferences",
+      "source": "Project Screenshots/Database verification after each step/Check user notification preferences.png"
+    },
+    {
+      "file": "db-002.png",
+      "caption": "Check users:roles (for role-test clarity)",
+      "source": "Project Screenshots/Database verification after each step/Check users:roles (for role-test clarity).png"
+    },
+    {
+      "file": "db-003.png",
+      "caption": "Check users_roles (for role-test clarity)",
+      "source": "Project Screenshots/Database verification after each step/Check users_roles (for role-test clarity).png"
+    },
+    {
+      "file": "db-004.png",
+      "caption": "Resources Table",
+      "source": "Project Screenshots/Database verification after each step/Resources Table.png"
+    },
+    {
+      "file": "db-005.png",
+      "caption": "Schema",
+      "source": "Project Screenshots/Database verification after each step/Schema.png"
+    },
+    {
+      "file": "db-006.png",
+      "caption": "Screenshot 2026-04-28 at 00.47.48",
+      "source": "Project Screenshots/Database verification after each step/Screenshot 2026-04-28 at 00.47.48.png"
+    }
+  ],
+  "api": [
+    {
+      "file": "api-001.png",
+      "caption": "/api/auth/forgot-password",
+      "source": "Project Screenshots/API Endpoints with Postman/Authentication Endpoints (:api:auth)/:api:auth:forgot-password.png"
+    },
+    {
+      "file": "api-002.png",
+      "caption": "/api/auth/login",
+      "source": "Project Screenshots/API Endpoints with Postman/Authentication Endpoints (:api:auth)/:api:auth:login.png"
+    },
+    {
+      "file": "api-003.png",
+      "caption": "/api/auth/logout",
+      "source": "Project Screenshots/API Endpoints with Postman/Authentication Endpoints (:api:auth)/:api:auth:logout.png"
+    },
+    {
+      "file": "api-004.png",
+      "caption": "/api/auth/me",
+      "source": "Project Screenshots/API Endpoints with Postman/Authentication Endpoints (:api:auth)/:api:auth:me.png"
+    },
+    {
+      "file": "api-005.png",
+      "caption": "/api/auth/reset-password",
+      "source": "Project Screenshots/API Endpoints with Postman/Authentication Endpoints (:api:auth)/:api:auth:reset-password.png"
+    },
+    {
+      "file": "api-006.png",
+      "caption": "/api/auth/signin",
+      "source": "Project Screenshots/API Endpoints with Postman/Authentication Endpoints (:api:auth)/:api:auth:signin.png"
+    },
+    {
+      "file": "api-007.png",
+      "caption": "/api/auth/signup",
+      "source": "Project Screenshots/API Endpoints with Postman/Authentication Endpoints (:api:auth)/:api:auth:signup.png"
+    },
+    {
+      "file": "api-008.png",
+      "caption": "/api/bookings/Get",
+      "source": "Project Screenshots/API Endpoints with Postman/Booking Endpoints (:api:bookings)/:api:bookings:Get.png"
+    },
+    {
+      "file": "api-009.png",
+      "caption": "/api/bookings/post",
+      "source": "Project Screenshots/API Endpoints with Postman/Booking Endpoints (:api:bookings)/:api:bookings:post.png"
+    },
+    {
+      "file": "api-010.png",
+      "caption": "/api/bookings/{id}//put/cancel",
+      "source": "Project Screenshots/API Endpoints with Postman/Booking Endpoints (:api:bookings)/:api:bookings:{id}::put:cancel.png"
+    },
+    {
+      "file": "api-011.png",
+      "caption": "/api/bookings/{id}/put",
+      "source": "Project Screenshots/API Endpoints with Postman/Booking Endpoints (:api:bookings)/:api:bookings:{id}:put.png"
+    },
+    {
+      "file": "api-012.png",
+      "caption": "Booking end point delete confirmation",
+      "source": "Project Screenshots/API Endpoints with Postman/Booking Endpoints (:api:bookings)/Booking end point delete confirmation.png"
+    },
+    {
+      "file": "api-013.png",
+      "caption": "Booking endpoint deleted",
+      "source": "Project Screenshots/API Endpoints with Postman/Booking Endpoints (:api:bookings)/Booking endpoint deleted.png"
+    },
+    {
+      "file": "api-014.png",
+      "caption": "/api/admin/users/post",
+      "source": "Project Screenshots/API Endpoints with Postman/Notification and Admin Endpoints/:api:admin:users:post.png"
+    },
+    {
+      "file": "api-015.png",
+      "caption": "/api/notifications/Get",
+      "source": "Project Screenshots/API Endpoints with Postman/Notification and Admin Endpoints/:api:notifications:Get.png"
+    },
+    {
+      "file": "api-016.png",
+      "caption": "1 - Sign in",
+      "source": "Project Screenshots/API Endpoints with Postman/Other Postman API Endpoints/1 - Login:Auth check/1 - Sign in.png"
+    },
+    {
+      "file": "api-017.png",
+      "caption": "2 - Check logged user",
+      "source": "Project Screenshots/API Endpoints with Postman/Other Postman API Endpoints/1 - Login:Auth check/2 - Check logged user.png"
+    },
+    {
+      "file": "api-018.png",
+      "caption": "1 - Create resource",
+      "source": "Project Screenshots/API Endpoints with Postman/Other Postman API Endpoints/2 - Resource CRUD test (create:get:update:delete)/1 - Create resource.png"
+    },
+    {
+      "file": "api-019.png",
+      "caption": "2 - Get all resources",
+      "source": "Project Screenshots/API Endpoints with Postman/Other Postman API Endpoints/2 - Resource CRUD test (create:get:update:delete)/2 - Get all resources.png"
+    },
+    {
+      "file": "api-020.png",
+      "caption": "3 - Update resource",
+      "source": "Project Screenshots/API Endpoints with Postman/Other Postman API Endpoints/2 - Resource CRUD test (create:get:update:delete)/3 - Update resource.png"
+    },
+    {
+      "file": "api-021.png",
+      "caption": "4 - Delete resource",
+      "source": "Project Screenshots/API Endpoints with Postman/Other Postman API Endpoints/2 - Resource CRUD test (create:get:update:delete)/4 - Delete resource.png"
+    },
+    {
+      "file": "api-022.png",
+      "caption": "1 - Create notification (ADMIN only)",
+      "source": "Project Screenshots/API Endpoints with Postman/Other Postman API Endpoints/3 - Notification APIs (role-based)/1 - Create notification (ADMIN only).png"
+    },
+    {
+      "file": "api-023.png",
+      "caption": "2 - Get notifications (for current logged role)",
+      "source": "Project Screenshots/API Endpoints with Postman/Other Postman API Endpoints/3 - Notification APIs (role-based)/2 - Get notifications (for current logged role).png"
+    },
+    {
+      "file": "api-024.png",
+      "caption": "1 - Get current preferences",
+      "source": "Project Screenshots/API Endpoints with Postman/Other Postman API Endpoints/4 - Notification preferences APIs/1 - Get current preferences.png"
+    },
+    {
+      "file": "api-025.png",
+      "caption": "2 - Update preferences",
+      "source": "Project Screenshots/API Endpoints with Postman/Other Postman API Endpoints/4 - Notification preferences APIs/2 - Update preferences.png"
+    },
+    {
+      "file": "api-026.png",
+      "caption": "3 - Re-check notifications after disabling category",
+      "source": "Project Screenshots/API Endpoints with Postman/Other Postman API Endpoints/4 - Notification preferences APIs/3 - Re-check notifications after disabling category.png"
+    },
+    {
+      "file": "api-027.png",
+      "caption": "1 - without login",
+      "source": "Project Screenshots/API Endpoints with Postman/Other Postman API Endpoints/5 - Auth:session behavior checks/1 - without login.png"
+    },
+    {
+      "file": "api-028.png",
+      "caption": "Non-admin trying admin notification create",
+      "source": "Project Screenshots/API Endpoints with Postman/Other Postman API Endpoints/5 - Auth:session behavior checks/Non-admin trying admin notification create.png"
+    },
+    {
+      "file": "api-029.png",
+      "caption": "/api/resources/Get",
+      "source": "Project Screenshots/API Endpoints with Postman/Resource Endpoints (:api:resources)/:api:resources:Get.png"
+    },
+    {
+      "file": "api-030.png",
+      "caption": "/api/resources/Post",
+      "source": "Project Screenshots/API Endpoints with Postman/Resource Endpoints (:api:resources)/:api:resources:Post.png"
+    },
+    {
+      "file": "api-031.png",
+      "caption": "/api/resources/{id}/Delete",
+      "source": "Project Screenshots/API Endpoints with Postman/Resource Endpoints (:api:resources)/:api:resources:{id}:Delete.png"
+    },
+    {
+      "file": "api-032.png",
+      "caption": "/api/resources/{id}/GET",
+      "source": "Project Screenshots/API Endpoints with Postman/Resource Endpoints (:api:resources)/:api:resources:{id}:GET.png"
+    },
+    {
+      "file": "api-033.png",
+      "caption": "/api/resources/{id}/put",
+      "source": "Project Screenshots/API Endpoints with Postman/Resource Endpoints (:api:resources)/:api:resources:{id}:put.png"
+    },
+    {
+      "file": "api-034.png",
+      "caption": "/api/tickets/get",
+      "source": "Project Screenshots/API Endpoints with Postman/Ticket Endpoints (:api:tickets)/:api:tickets:get.png"
+    },
+    {
+      "file": "api-035.png",
+      "caption": "/api/tickets/post",
+      "source": "Project Screenshots/API Endpoints with Postman/Ticket Endpoints (:api:tickets)/:api:tickets:post.png"
+    },
+    {
+      "file": "api-036.png",
+      "caption": "/api/tickets/{id}/assign",
+      "source": "Project Screenshots/API Endpoints with Postman/Ticket Endpoints (:api:tickets)/:api:tickets:{id}:assign.png"
+    },
+    {
+      "file": "api-037.png",
+      "caption": "/api/tickets/{id}/Delete",
+      "source": "Project Screenshots/API Endpoints with Postman/Ticket Endpoints (:api:tickets)/:api:tickets:{id}:Delete.png"
+    },
+    {
+      "file": "api-038.png",
+      "caption": "/api/tickets/{id}/put",
+      "source": "Project Screenshots/API Endpoints with Postman/Ticket Endpoints (:api:tickets)/:api:tickets:{id}:put.png"
+    },
+    {
+      "file": "api-039.png",
+      "caption": "/api/tickets/{id}/upload",
+      "source": "Project Screenshots/API Endpoints with Postman/Ticket Endpoints (:api:tickets)/:api:tickets:{id}:upload.png"
+    }
+  ]
+}
