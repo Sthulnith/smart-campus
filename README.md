@@ -20,14 +20,14 @@
 11. [GitHub Actions / CI Workflow](#github-actions--ci-workflow)
 12. [Team Members and Contributions](#team-members-and-contributions)
 13. [Project Demonstration](#project-demonstration)
-    - [Web Application Screenshots](#web-application-screenshots)
-    - [API Testing Evidence](#api-testing-evidence)
-    - [Database Validation Evidence](#database-validation-evidence)
-    - [System Demonstration Summary](#system-demonstration-summary)
-14. [Documentation](#documentation)
-15. [Future Improvements](#future-improvements)
-16. [References](#references)
-17. [License](#license)
+14. [Application Demo Screenshots](#application-demo-screenshots)
+15. [Postman API Testing Evidence](#postman-api-testing-evidence)
+16. [Database Validation Evidence](#database-validation-evidence)
+17. [System Demonstration Summary](#system-demonstration-summary)
+18. [Documentation](#documentation)
+19. [Future Improvements](#future-improvements)
+20. [References](#references)
+21. [License](#license)
 
 ---
 
@@ -133,31 +133,46 @@ Universities manage shared facilities (lecture halls, labs, meeting rooms, equip
 
 ### High-Level Architecture
 
-```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         Client Browser (React SPA)                       │
-│  Pages • Components • AuthContext • Axios (withCredentials)              │
-└───────────────────────────────┬─────────────────────────────────────────┘
-                                │ HTTP/REST (JSON)
-                                ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    Spring Boot Backend (Port 8080)                       │
-│  ┌─────────────┐  ┌─────────────┐  ┌──────────────┐  ┌─────────────────┐ │
-│  │ Controllers │→ │  Services   │→ │ Repositories │→ │ JPA Entities    │ │
-│  └─────────────┘  └─────────────┘  └──────────────┘  └─────────────────┘ │
-│  ┌─────────────────────────────────────────────────────────────────────┐ │
-│  │ Security: OAuth2 • Session • RBAC • Throttling • Exception Handler   │ │
-│  └─────────────────────────────────────────────────────────────────────┘ │
-└───────────────────────────────┬─────────────────────────────────────────┘
-                                │ JDBC
-                                ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         PostgreSQL Database                              │
-│  Flyway migrations • app_users • bookings • tickets • notifications     │
-└─────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Client["Client Tier"]
+        FE["React SPA - EduNexus<br/>Axios withCredentials"]
+    end
 
-External: Google OAuth 2.0  |  SMTP (password reset emails)
+    subgraph Server["Application Tier - Spring Boot :8080"]
+        CTRL["REST Controllers"]
+        SVC["Services"]
+        REPO["JPA Repositories"]
+        SEC["Spring Security<br/>OAuth2 - Session - RBAC"]
+        CTRL --> SVC --> REPO
+        SEC --> CTRL
+    end
+
+    subgraph Data["Data Tier"]
+        DB[(PostgreSQL)]
+        FW["Flyway Migrations"]
+        FW --> DB
+    end
+
+    OAuth["Google OAuth 2.0"]
+    SMTP["SMTP Mail Server"]
+
+    FE -->|"HTTP REST JSON"| CTRL
+    REPO -->|"JDBC"| DB
+    SEC --> OAuth
+    SVC --> SMTP
 ```
+
+### Backend Layered Architecture
+
+```mermaid
+flowchart LR
+    C["Controller Layer"] --> S["Service Layer"]
+    S --> R["Repository Layer"]
+    R --> E["Entity Layer"]
+    E --> DB[(PostgreSQL)]
+```
+
 
 ### Spring Boot Layered Design
 
@@ -633,523 +648,450 @@ jobs:
 
 ## Project Demonstration
 
-This section provides visual evidence of the Smart Campus Platform for SLIIT PAF Assignment 2026. All images are stored under [`docs/screenshots/`](docs/screenshots/) using a consistent naming convention.
+Visual evidence for SLIIT PAF Assignment 2026. All screenshots are in [`docs/screenshots/`](docs/screenshots/).
 
-| Folder | Prefix | Count |
-|--------|--------|-------|
-| [`web-application/`](docs/screenshots/web-application/) | `web-###.png` | 33 |
-| [`api-testing/`](docs/screenshots/api-testing/) | `api-###.png` | 39 |
-| [`database-validation/`](docs/screenshots/database-validation/) | `db-###.png` | 6 |
+## Application Demo Screenshots
 
-### Web Application Screenshots
+EduNexus (React) web interface demonstrating implemented campus operations.
 
-<details>
-<summary><strong>View all web application screenshots (gallery)</strong></summary>
-
-#### Email Reset Mail
+### Authentication and Account Recovery
 
 ![Email Reset Mail](docs/screenshots/web-application/web-001.png)
 
-*Figure: Email Reset Mail — EduNexus web interface.*
+***Email Reset Mail** — Smart Campus web application.*
 
-#### Forgot Password
 
 ![Forgot Password](docs/screenshots/web-application/web-002.png)
 
-*Figure: Forgot Password — EduNexus web interface.*
+***Forgot Password** — Smart Campus web application.*
 
-#### Password Update
 
 ![Password Update](docs/screenshots/web-application/web-003.png)
 
-*Figure: Password Update — EduNexus web interface.*
+***Password Update** — Smart Campus web application.*
 
-#### Sign in - Google Auth
 
 ![Sign in - Google Auth](docs/screenshots/web-application/web-004.png)
 
-*Figure: Sign in - Google Auth — EduNexus web interface.*
+***Sign in - Google Auth** — Smart Campus web application.*
 
-#### Sign in - normal
 
 ![Sign in - normal](docs/screenshots/web-application/web-005.png)
 
-*Figure: Sign in - normal — EduNexus web interface.*
+***Sign in - normal** — Smart Campus web application.*
 
-#### Sign up
 
 ![Sign up](docs/screenshots/web-application/web-006.png)
 
-*Figure: Sign up — EduNexus web interface.*
+***Sign up** — Smart Campus web application.*
 
-#### Admin dashboard
+
+### Dashboards
 
 ![Admin dashboard](docs/screenshots/web-application/web-007.png)
 
-*Figure: Admin dashboard — EduNexus web interface.*
+***Admin dashboard** — Smart Campus web application.*
 
-#### User Dashboard
 
 ![User Dashboard](docs/screenshots/web-application/web-008.png)
 
-*Figure: User Dashboard — EduNexus web interface.*
+***User Dashboard** — Smart Campus web application.*
 
-#### Facilities Create
+
+### Facility Management
 
 ![Facilities Create](docs/screenshots/web-application/web-009.png)
 
-*Figure: Facilities Create — EduNexus web interface.*
+***Facilities Create** — Smart Campus web application.*
 
-#### Facilities Delete
 
 ![Facilities Delete](docs/screenshots/web-application/web-010.png)
 
-*Figure: Facilities Delete — EduNexus web interface.*
+***Facilities Delete** — Smart Campus web application.*
 
-#### Facilities Read
 
 ![Facilities Read](docs/screenshots/web-application/web-011.png)
 
-*Figure: Facilities Read — EduNexus web interface.*
+***Facilities Read** — Smart Campus web application.*
 
-#### Facilities Update
 
 ![Facilities Update](docs/screenshots/web-application/web-012.png)
 
-*Figure: Facilities Update — EduNexus web interface.*
+***Facilities Update** — Smart Campus web application.*
 
-#### Booking Page
+
+### Booking Management
 
 ![Booking Page](docs/screenshots/web-application/web-013.png)
 
-*Figure: Booking Page — EduNexus web interface.*
+***Booking Page** — Smart Campus web application.*
 
-#### Create Booking 1
 
 ![Create Booking 1](docs/screenshots/web-application/web-014.png)
 
-*Figure: Create Booking 1 — EduNexus web interface.*
+***Create Booking 1** — Smart Campus web application.*
 
-#### Create Booking 2
 
 ![Create Booking 2](docs/screenshots/web-application/web-015.png)
 
-*Figure: Create Booking 2 — EduNexus web interface.*
+***Create Booking 2** — Smart Campus web application.*
 
-#### Delete Booking
 
 ![Delete Booking](docs/screenshots/web-application/web-016.png)
 
-*Figure: Delete Booking — EduNexus web interface.*
+***Delete Booking** — Smart Campus web application.*
 
-#### Read Booking
 
 ![Read Booking](docs/screenshots/web-application/web-017.png)
 
-*Figure: Read Booking — EduNexus web interface.*
+***Read Booking** — Smart Campus web application.*
 
-#### Booking Analysis
 
 ![Booking Analysis](docs/screenshots/web-application/web-018.png)
 
-*Figure: Booking Analysis — EduNexus web interface.*
+***Booking Analysis** — Smart Campus web application.*
 
-#### Add Technician
+
+### Support Tickets
 
 ![Add Technician](docs/screenshots/web-application/web-019.png)
 
-*Figure: Add Technician — EduNexus web interface.*
+***Add Technician** — Smart Campus web application.*
 
-#### Create Notification
+
+![Support ticket list and status view](docs/screenshots/web-application/web-030.png)
+
+***Support ticket list and status view** — Smart Campus web application.*
+
+
+![Support ticket list and status view](docs/screenshots/web-application/web-031.png)
+
+***Support ticket list and status view** — Smart Campus web application.*
+
+
+![Create support ticket — step 1](docs/screenshots/web-application/web-032.png)
+
+***Create support ticket — step 1** — Smart Campus web application.*
+
+
+![Create support ticket — step 2](docs/screenshots/web-application/web-033.png)
+
+***Create support ticket — step 2** — Smart Campus web application.*
+
+
+### Notifications
 
 ![Create Notification](docs/screenshots/web-application/web-020.png)
 
-*Figure: Create Notification — EduNexus web interface.*
+***Create Notification** — Smart Campus web application.*
 
-#### Notification Delete
 
 ![Notification Delete](docs/screenshots/web-application/web-021.png)
 
-*Figure: Notification Delete — EduNexus web interface.*
+***Notification Delete** — Smart Campus web application.*
 
-#### Read Notification
 
 ![Read Notification](docs/screenshots/web-application/web-022.png)
 
-*Figure: Read Notification — EduNexus web interface.*
+***Read Notification** — Smart Campus web application.*
 
-#### User Profile Read
+
+### User Profile
 
 ![User Profile Read](docs/screenshots/web-application/web-023.png)
 
-*Figure: User Profile Read — EduNexus web interface.*
+***User Profile Read** — Smart Campus web application.*
 
-#### User Profile Update
 
 ![User Profile Update](docs/screenshots/web-application/web-024.png)
 
-*Figure: User Profile Update — EduNexus web interface.*
+***User Profile Update** — Smart Campus web application.*
 
-#### User Management
+
+### Administration
 
 ![User Management](docs/screenshots/web-application/web-025.png)
 
-*Figure: User Management — EduNexus web interface.*
+***User Management** — Smart Campus web application.*
 
-#### Campus operations UI demonstration
 
-![Campus operations UI demonstration](docs/screenshots/web-application/web-026.png)
+### Additional Application Views
 
-*Figure: Campus operations UI demonstration — EduNexus web interface.*
+![Application workflow demonstration](docs/screenshots/web-application/web-026.png)
 
-#### Campus operations UI demonstration
+***Application workflow demonstration** — Smart Campus web application.*
 
-![Campus operations UI demonstration](docs/screenshots/web-application/web-027.png)
 
-*Figure: Campus operations UI demonstration — EduNexus web interface.*
+![Application workflow demonstration](docs/screenshots/web-application/web-027.png)
 
-#### Campus operations UI demonstration
+***Application workflow demonstration** — Smart Campus web application.*
 
-![Campus operations UI demonstration](docs/screenshots/web-application/web-028.png)
 
-*Figure: Campus operations UI demonstration — EduNexus web interface.*
+![Application workflow demonstration](docs/screenshots/web-application/web-028.png)
 
-#### Campus operations UI demonstration
+***Application workflow demonstration** — Smart Campus web application.*
 
-![Campus operations UI demonstration](docs/screenshots/web-application/web-029.png)
 
-*Figure: Campus operations UI demonstration — EduNexus web interface.*
+![Application workflow demonstration](docs/screenshots/web-application/web-029.png)
 
-#### Support ticket management UI
+***Application workflow demonstration** — Smart Campus web application.*
 
-![Support ticket management UI](docs/screenshots/web-application/web-030.png)
 
-*Figure: Support ticket management UI — EduNexus web interface.*
+## Postman API Testing Evidence
 
-#### Support ticket management UI
+REST API validation using Postman against the Spring Boot backend (`http://localhost:8080/api`).
 
-![Support ticket management UI](docs/screenshots/web-application/web-031.png)
-
-*Figure: Support ticket management UI — EduNexus web interface.*
-
-#### Tickect Create 1
-
-![Tickect Create 1](docs/screenshots/web-application/web-032.png)
-
-*Figure: Tickect Create 1 — EduNexus web interface.*
-
-#### Tickect Create 2
-
-![Tickect Create 2](docs/screenshots/web-application/web-033.png)
-
-*Figure: Tickect Create 2 — EduNexus web interface.*
-
-</details>
-
-### API Testing Evidence
-
-Postman was used to validate REST endpoints against the Spring Boot backend. Screenshots confirm request/response behavior, HTTP status codes, and RBAC enforcement.
-
-<details>
-<summary><strong>View all API testing screenshots (gallery)</strong></summary>
-
-#### /api/auth/forgot-password
+### Authentication APIs
 
 ![/api/auth/forgot-password](docs/screenshots/api-testing/api-001.png)
 
-*Figure: /api/auth/forgot-password — POST — Request password reset link for a registered email.*
+***/api/auth/forgot-password** — POST `/api/auth/forgot-password` — Request password reset email.*
 
-#### /api/auth/login
 
 ![/api/auth/login](docs/screenshots/api-testing/api-002.png)
 
-*Figure: /api/auth/login — GET — Retrieve Google OAuth2 authorization URL.*
+***/api/auth/login** — GET `/api/auth/login` — Returns Google OAuth2 authorization URL.*
 
-#### /api/auth/logout
 
 ![/api/auth/logout](docs/screenshots/api-testing/api-003.png)
 
-*Figure: /api/auth/logout — POST — End the current HTTP session.*
+***/api/auth/logout** — POST `/api/auth/logout` — Ends the active session.*
 
-#### /api/auth/me
 
 ![/api/auth/me](docs/screenshots/api-testing/api-004.png)
 
-*Figure: /api/auth/me — GET — Return authenticated user profile and role.*
+***/api/auth/me** — GET `/api/auth/me` — Returns authenticated user profile and role.*
 
-#### /api/auth/reset-password
 
 ![/api/auth/reset-password](docs/screenshots/api-testing/api-005.png)
 
-*Figure: /api/auth/reset-password — POST — Set a new password using a valid reset token.*
+***/api/auth/reset-password** — POST `/api/auth/reset-password` — Completes password reset with token.*
 
-#### /api/auth/signin
 
 ![/api/auth/signin](docs/screenshots/api-testing/api-006.png)
 
-*Figure: /api/auth/signin — POST — Authenticate with email and password; creates session.*
+***/api/auth/signin** — POST `/api/auth/signin` — Email/password login; establishes session.*
 
-#### /api/auth/signup
 
 ![/api/auth/signup](docs/screenshots/api-testing/api-007.png)
 
-*Figure: /api/auth/signup — POST — Register a new local user account.*
+***/api/auth/signup** — POST `/api/auth/signup` — Registers a new local user account.*
 
-#### /api/bookings/Get
-
-![/api/bookings/Get](docs/screenshots/api-testing/api-008.png)
-
-*Figure: /api/bookings/Get — Booking module — list, create, update, cancel, approve, or reject reservations.*
-
-#### /api/bookings/post
-
-![/api/bookings/post](docs/screenshots/api-testing/api-009.png)
-
-*Figure: /api/bookings/post — Booking module — list, create, update, cancel, approve, or reject reservations.*
-
-#### /api/bookings/{id}//put/cancel
-
-![/api/bookings/{id}//put/cancel](docs/screenshots/api-testing/api-010.png)
-
-*Figure: /api/bookings/{id}//put/cancel — Booking module — list, create, update, cancel, approve, or reject reservations.*
-
-#### /api/bookings/{id}/put
-
-![/api/bookings/{id}/put](docs/screenshots/api-testing/api-011.png)
-
-*Figure: /api/bookings/{id}/put — Booking module — list, create, update, cancel, approve, or reject reservations.*
-
-#### Booking end point delete confirmation
-
-![Booking end point delete confirmation](docs/screenshots/api-testing/api-012.png)
-
-*Figure: Booking end point delete confirmation — DELETE `/api/bookings/{id}` — Admin booking removal.*
-
-#### Booking endpoint deleted
-
-![Booking endpoint deleted](docs/screenshots/api-testing/api-013.png)
-
-*Figure: Booking endpoint deleted — DELETE `/api/bookings/{id}` — Admin booking removal.*
-
-#### /api/admin/users/post
-
-![/api/admin/users/post](docs/screenshots/api-testing/api-014.png)
-
-*Figure: /api/admin/users/post — POST — Admin-only creation of administrator accounts.*
-
-#### /api/notifications/Get
-
-![/api/notifications/Get](docs/screenshots/api-testing/api-015.png)
-
-*Figure: /api/notifications/Get — GET — Role-filtered campus notifications.*
-
-#### 1 - Sign in
 
 ![1 - Sign in](docs/screenshots/api-testing/api-016.png)
 
-*Figure: 1 - Sign in — POST — Authenticate with email and password; creates session.*
+***1 - Sign in** — POST `/api/auth/signin` — Session login verification.*
 
-#### 2 - Check logged user
 
 ![2 - Check logged user](docs/screenshots/api-testing/api-017.png)
 
-*Figure: 2 - Check logged user — GET `/api/auth/me` — Verify active session.*
+***2 - Check logged user** — GET `/api/auth/me` — Confirms active authenticated session.*
 
-#### 1 - Create resource
-
-![1 - Create resource](docs/screenshots/api-testing/api-018.png)
-
-*Figure: 1 - Create resource — POST `/api/resources` — Create a campus facility.*
-
-#### 2 - Get all resources
-
-![2 - Get all resources](docs/screenshots/api-testing/api-019.png)
-
-*Figure: 2 - Get all resources — Resource module — facility CRUD operations.*
-
-#### 3 - Update resource
-
-![3 - Update resource](docs/screenshots/api-testing/api-020.png)
-
-*Figure: 3 - Update resource — PUT `/api/resources/{id}` — Update facility details.*
-
-#### 4 - Delete resource
-
-![4 - Delete resource](docs/screenshots/api-testing/api-021.png)
-
-*Figure: 4 - Delete resource — DELETE `/api/resources/{id}` — Remove a facility.*
-
-#### 1 - Create notification (ADMIN only)
-
-![1 - Create notification (ADMIN only)](docs/screenshots/api-testing/api-022.png)
-
-*Figure: 1 - Create notification (ADMIN only) — POST `/api/notifications` — Admin broadcast (role-targeted).*
-
-#### 2 - Get notifications (for current logged role)
-
-![2 - Get notifications (for current logged role)](docs/screenshots/api-testing/api-023.png)
-
-*Figure: 2 - Get notifications (for current logged role) — GET — Role-filtered campus notifications.*
-
-#### 1 - Get current preferences
-
-![1 - Get current preferences](docs/screenshots/api-testing/api-024.png)
-
-*Figure: 1 - Get current preferences — Notification preference APIs — GET/PUT `/api/notifications/preferences`.*
-
-#### 2 - Update preferences
-
-![2 - Update preferences](docs/screenshots/api-testing/api-025.png)
-
-*Figure: 2 - Update preferences — Notification preference APIs — GET/PUT `/api/notifications/preferences`.*
-
-#### 3 - Re-check notifications after disabling category
-
-![3 - Re-check notifications after disabling category](docs/screenshots/api-testing/api-026.png)
-
-*Figure: 3 - Re-check notifications after disabling category — GET — Role-filtered campus notifications.*
-
-#### 1 - without login
 
 ![1 - without login](docs/screenshots/api-testing/api-027.png)
 
-*Figure: 1 - without login — GET — Retrieve Google OAuth2 authorization URL.*
+***1 - without login** — Security test — unauthenticated request rejected (401).*
 
-#### Non-admin trying admin notification create
 
-![Non-admin trying admin notification create](docs/screenshots/api-testing/api-028.png)
+### Resource APIs
 
-*Figure: Non-admin trying admin notification create — RBAC test — non-admin blocked from admin-only notification creation.*
+![1 - Create resource](docs/screenshots/api-testing/api-018.png)
 
-#### /api/resources/Get
+***1 - Create resource** — POST `/api/resources` — Facility creation test.*
+
+
+![2 - Get all resources](docs/screenshots/api-testing/api-019.png)
+
+***2 - Get all resources** — GET `/api/resources` — Facility listing test.*
+
+
+![3 - Update resource](docs/screenshots/api-testing/api-020.png)
+
+***3 - Update resource** — PUT `/api/resources/{id}` — Facility update test.*
+
+
+![4 - Delete resource](docs/screenshots/api-testing/api-021.png)
+
+***4 - Delete resource** — DELETE `/api/resources/{id}` — Facility deletion test.*
+
 
 ![/api/resources/Get](docs/screenshots/api-testing/api-029.png)
 
-*Figure: /api/resources/Get — Resource module — facility CRUD operations.*
+***/api/resources/Get** — GET `/api/resources` — Lists all campus facilities.*
 
-#### /api/resources/Post
 
 ![/api/resources/Post](docs/screenshots/api-testing/api-030.png)
 
-*Figure: /api/resources/Post — Resource module — facility CRUD operations.*
+***/api/resources/Post** — POST `/api/resources` — Creates a new facility (admin).*
 
-#### /api/resources/{id}/Delete
 
 ![/api/resources/{id}/Delete](docs/screenshots/api-testing/api-031.png)
 
-*Figure: /api/resources/{id}/Delete — Resource module — facility CRUD operations.*
+***/api/resources/{id}/Delete** — DELETE `/api/resources/{id}` — Deletes a facility (admin).*
 
-#### /api/resources/{id}/GET
 
 ![/api/resources/{id}/GET](docs/screenshots/api-testing/api-032.png)
 
-*Figure: /api/resources/{id}/GET — Resource module — facility CRUD operations.*
+***/api/resources/{id}/GET** — GET `/api/resources/{id}` — Retrieves a single facility.*
 
-#### /api/resources/{id}/put
 
 ![/api/resources/{id}/put](docs/screenshots/api-testing/api-033.png)
 
-*Figure: /api/resources/{id}/put — Resource module — facility CRUD operations.*
+***/api/resources/{id}/put** — PUT `/api/resources/{id}` — Updates facility details (admin).*
 
-#### /api/tickets/get
+
+### Booking APIs
+
+![/api/bookings/Get](docs/screenshots/api-testing/api-008.png)
+
+***/api/bookings/Get** — GET `/api/bookings` — Lists all bookings (admin view).*
+
+
+![/api/bookings/post](docs/screenshots/api-testing/api-009.png)
+
+***/api/bookings/post** — POST `/api/bookings` — Creates a facility booking with conflict check.*
+
+
+![/api/bookings/{id}//put/cancel](docs/screenshots/api-testing/api-010.png)
+
+***/api/bookings/{id}//put/cancel** — PUT `/api/bookings/{id}/cancel` — Cancels a booking.*
+
+
+![/api/bookings/{id}/put](docs/screenshots/api-testing/api-011.png)
+
+***/api/bookings/{id}/put** — PUT `/api/bookings/{id}` — Updates booking details.*
+
+
+![Booking end point delete confirmation](docs/screenshots/api-testing/api-012.png)
+
+***Booking end point delete confirmation** — DELETE `/api/bookings/{id}` — Admin removes a booking.*
+
+
+![Booking endpoint deleted](docs/screenshots/api-testing/api-013.png)
+
+***Booking endpoint deleted** — DELETE `/api/bookings/{id}` — Admin removes a booking.*
+
+
+### Ticket APIs
 
 ![/api/tickets/get](docs/screenshots/api-testing/api-034.png)
 
-*Figure: /api/tickets/get — Ticket module — support request lifecycle and file upload.*
+***/api/tickets/get** — GET `/api/tickets` — Lists support tickets.*
 
-#### /api/tickets/post
 
 ![/api/tickets/post](docs/screenshots/api-testing/api-035.png)
 
-*Figure: /api/tickets/post — Ticket module — support request lifecycle and file upload.*
+***/api/tickets/post** — POST `/api/tickets` — Creates a new support ticket.*
 
-#### /api/tickets/{id}/assign
 
 ![/api/tickets/{id}/assign](docs/screenshots/api-testing/api-036.png)
 
-*Figure: /api/tickets/{id}/assign — Ticket module — support request lifecycle and file upload.*
+***/api/tickets/{id}/assign** — PUT `/api/tickets/{id}/assign` — Assigns a technician to a ticket.*
 
-#### /api/tickets/{id}/Delete
 
 ![/api/tickets/{id}/Delete](docs/screenshots/api-testing/api-037.png)
 
-*Figure: /api/tickets/{id}/Delete — Ticket module — support request lifecycle and file upload.*
+***/api/tickets/{id}/Delete** — DELETE `/api/tickets/{id}` — Deletes a ticket.*
 
-#### /api/tickets/{id}/put
 
 ![/api/tickets/{id}/put](docs/screenshots/api-testing/api-038.png)
 
-*Figure: /api/tickets/{id}/put — Ticket module — support request lifecycle and file upload.*
+***/api/tickets/{id}/put** — PUT `/api/tickets/{id}` — Updates ticket fields.*
 
-#### /api/tickets/{id}/upload
 
 ![/api/tickets/{id}/upload](docs/screenshots/api-testing/api-039.png)
 
-*Figure: /api/tickets/{id}/upload — Ticket module — support request lifecycle and file upload.*
+***/api/tickets/{id}/upload** — POST `/api/tickets/{id}/upload` — Uploads ticket images (max 3).*
 
-</details>
 
-### Database Validation Evidence
+### Notification and Admin APIs
 
-PostgreSQL was inspected after key workflows to confirm schema integrity, persisted entities, and role assignments.
+![/api/admin/users/post](docs/screenshots/api-testing/api-014.png)
 
-#### Check user notification preferences
+***/api/admin/users/post** — POST `/api/admin/users` — Admin creates a new administrator account.*
+
+
+![/api/notifications/Get](docs/screenshots/api-testing/api-015.png)
+
+***/api/notifications/Get** — GET `/api/notifications` — Role-filtered campus notifications.*
+
+
+![1 - Create notification (ADMIN only)](docs/screenshots/api-testing/api-022.png)
+
+***1 - Create notification (ADMIN only)** — POST `/api/notifications` — Admin-only notification broadcast.*
+
+
+![2 - Get notifications (for current logged role)](docs/screenshots/api-testing/api-023.png)
+
+***2 - Get notifications (for current logged role)** — GET `/api/notifications` — Notifications for current user role.*
+
+
+![1 - Get current preferences](docs/screenshots/api-testing/api-024.png)
+
+***1 - Get current preferences** — Notification preference API — GET/PUT `/api/notifications/preferences`.*
+
+
+![2 - Update preferences](docs/screenshots/api-testing/api-025.png)
+
+***2 - Update preferences** — Notification preference API — GET/PUT `/api/notifications/preferences`.*
+
+
+![3 - Re-check notifications after disabling category](docs/screenshots/api-testing/api-026.png)
+
+***3 - Re-check notifications after disabling category** — Postman test: 3 - Re-check notifications after disabling category*
+
+
+![Non-admin trying admin notification create](docs/screenshots/api-testing/api-028.png)
+
+***Non-admin trying admin notification create** — RBAC test — non-admin blocked from admin-only endpoint (403).*
+
+
+## Database Validation Evidence
 
 ![Check user notification preferences](docs/screenshots/database-validation/db-001.png)
 
-*Figure: Check user notification preferences — Verifies `user_notification_preferences` records per category toggle.*
+***Check user notification preferences** — Verifies `user_notification_preferences` after preference updates.*
 
-#### Check users:roles (for role-test clarity)
 
 ![Check users:roles (for role-test clarity)](docs/screenshots/database-validation/db-002.png)
 
-*Figure: Check users:roles (for role-test clarity) — Confirms `app_users.role` values for RBAC testing across accounts.*
+***Check users:roles (for role-test clarity)** — Validates `app_users.role` values for RBAC testing.*
 
-#### Check users_roles (for role-test clarity)
 
 ![Check users_roles (for role-test clarity)](docs/screenshots/database-validation/db-003.png)
 
-*Figure: Check users_roles (for role-test clarity) — Duplicate role verification query for assignment clarity.*
+***Check users_roles (for role-test clarity)** — Confirms role assignments across test accounts.*
 
-#### Resources Table
 
 ![Resources Table](docs/screenshots/database-validation/db-004.png)
 
-*Figure: Resources Table — Validates persisted facility/resource records after CRUD operations.*
+***Resources Table** — Shows persisted facility records after resource CRUD.*
 
-#### Schema
 
 ![Schema](docs/screenshots/database-validation/db-005.png)
 
-*Figure: Schema — PostgreSQL schema overview — tables, keys, and relationships.*
+***Schema** — PostgreSQL schema — tables, keys, and relationships.*
 
-#### Screenshot 2026-04-28 at 00.47.48
 
 ![Screenshot 2026-04-28 at 00.47.48](docs/screenshots/database-validation/db-006.png)
 
-*Figure: Screenshot 2026-04-28 at 00.47.48 — Additional database state verification after integration testing.*
+***Screenshot 2026-04-28 at 00.47.48** — Additional database verification after integration testing.*
 
-### System Demonstration Summary
 
-The following summary maps demonstrated capabilities to implemented modules in the codebase.
+## System Demonstration Summary
 
-#### User Authentication
-The platform supports **Google OAuth 2.0** and **local email/password** authentication with HTTP session cookies. Users can register, sign in, reset passwords, and retrieve their profile via `/api/auth/*`. The React frontend (`LoginPage`, `SignupPage`, `AuthCallbackPage`, `AuthContext`) integrates with `SecurityConfig` and `GoogleOAuth2UserService` for secure access.
+| Module | Demonstrated Capability | Implementation |
+|--------|-------------------------|----------------|
+| **User Authentication** | Google OAuth, local sign-up/sign-in, password reset, session logout | `AuthController`, `SecurityConfig`, `GoogleOAuth2UserService`, auth React pages |
+| **Resource Management** | Admin facility CRUD; users browse facilities | `ResourceController`, `ResourcePage` |
+| **Booking Management** | Create bookings, conflict detection, admin approve/reject/cancel | `BookingController`, `UserBookingPage`, `AdminBookingPage` |
+| **Incident Ticket Management** | Create tickets, assign technicians, status workflow, comments, image upload | `TicketController`, `TicketCommentController`, ticket React pages |
+| **Notifications** | Admin broadcasts by role; user category preferences | `NotificationController`, `NotificationsPage` |
+| **Admin Operations** | User listing, role updates, technician assignment, admin creation | `AdminUserController`, `AdminCreateAdminPage` |
 
-#### Resource Management
-Administrators manage campus facilities through `/api/resources` (CRUD). The `Resource` entity stores name, type, capacity, location, and status. The `ResourcePage` component provides the web UI for listing, creating, updating, and deleting resources.
 
-#### Booking Management
-Authenticated users create bookings via `POST /api/bookings` with **time-slot conflict detection** in `BookingController`. Admins approve or reject via `/approve` and `/reject` endpoints. Statuses include `PENDING`, `APPROVED`, `REJECTED`, and `CANCELLED`. Frontend pages: `UserBookingPage`, `AdminBookingPage`, and `BookingAnalysisPage`.
+---
 
-#### Incident Ticket Management
-Users raise support tickets with category, priority, description, and optional images (`POST /api/tickets/{id}/upload`). Admins assign technicians; technicians update status through validated transitions (`OPEN` → `IN_PROGRESS` → `RESOLVED` → `CLOSED`). `TicketCommentController` supports collaborative resolution threads.
-
-#### Notifications
-Admins publish role-targeted announcements (`POST /api/notifications`) in categories such as `BOOKING`, `MAINTENANCE`, `ANNOUNCEMENT`, `RESOURCE`, and `GENERAL`. Users filter content via `/api/notifications/preferences`. The `NotificationsPage` displays filtered results per user settings.
-
-#### Admin Operations
-Administrators manage users and roles through `/api/admin/users`, create additional admins, list technicians for ticket assignment, and oversee bookings, facilities, and notifications from role-specific dashboards (`AdminBookingPage`, `AdminTicketPage`, `AdminCreateAdminPage`).
 
 ---
 
