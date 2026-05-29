@@ -1,4 +1,7 @@
 # Root .gitignore
+.Rhistory
+*.log
+backend-error.txt
 .idea/
 .vscode/
 *.swp
