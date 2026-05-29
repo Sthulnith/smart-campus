@@ -1,0 +1,2 @@
+ALTER TABLE app_users
+    MODIFY COLUMN role VARCHAR(64) NOT NULL;
